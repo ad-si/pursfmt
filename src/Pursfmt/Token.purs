@@ -1,4 +1,4 @@
-module Tidy.Token
+module Pursfmt.Token
   ( UnicodeOption(..)
   , printToken
   ) where

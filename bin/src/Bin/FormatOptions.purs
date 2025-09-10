@@ -13,7 +13,7 @@ import Data.Argonaut.Encode (assoc, encodeJson, extend)
 import Data.Either (Either)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Traversable (traverse)
-import Tidy (ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
+import Pursfmt (ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
 type FormatOptions =
   { importSort :: ImportSortOption

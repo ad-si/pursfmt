@@ -1,7 +1,7 @@
 {
   "workspace": {
     "packages": {
-      "tidy": {
+      "pursfmt": {
         "path": "./",
         "core": {
           "dependencies": [
@@ -103,7 +103,7 @@
             "node-glob-basic",
             "node-path",
             {
-              "tidy-bin": "*"
+              "pursfmt-bin": "*"
             }
           ],
           "build_plan": [
@@ -164,14 +164,14 @@
             "posix-types",
             "prelude",
             "profunctor",
+            "pursfmt",
+            "pursfmt-bin",
             "record",
             "refs",
             "safe-coerce",
             "st",
             "strings",
             "tailrec",
-            "tidy",
-            "tidy-bin",
             "transformers",
             "tuples",
             "type-equality",
@@ -182,7 +182,7 @@
           ]
         }
       },
-      "tidy-bin": {
+      "pursfmt-bin": {
         "path": "bin",
         "core": {
           "dependencies": [
@@ -280,13 +280,13 @@
               "prelude": ">=6.0.1 <7.0.0"
             },
             {
+              "pursfmt": "*"
+            },
+            {
               "refs": ">=6.0.0 <7.0.0"
             },
             {
               "strings": ">=6.0.1 <7.0.0"
-            },
-            {
-              "tidy": "*"
             },
             {
               "transformers": ">=6.1.0 <7.0.0"
@@ -353,13 +353,13 @@
             "posix-types",
             "prelude",
             "profunctor",
+            "pursfmt",
             "record",
             "refs",
             "safe-coerce",
             "st",
             "strings",
             "tailrec",
-            "tidy",
             "transformers",
             "tuples",
             "type-equality",
@@ -367,117 +367,6 @@
             "unfoldable",
             "unsafe-coerce",
             "variant"
-          ]
-        },
-        "test": {
-          "dependencies": [],
-          "build_plan": []
-        }
-      },
-      "tidy-script": {
-        "path": "script",
-        "core": {
-          "dependencies": [
-            {
-              "arrays": ">=7.3.0 <8.0.0"
-            },
-            {
-              "console": ">=6.1.0 <7.0.0"
-            },
-            {
-              "effect": ">=4.0.0 <5.0.0"
-            },
-            {
-              "exceptions": ">=6.1.0 <7.0.0"
-            },
-            {
-              "maybe": ">=6.0.0 <7.0.0"
-            },
-            {
-              "node-buffer": ">=9.0.0 <10.0.0"
-            },
-            {
-              "node-child-process": ">=11.1.0 <12.0.0"
-            },
-            {
-              "node-fs": ">=9.2.0 <10.0.0"
-            },
-            {
-              "node-path": ">=5.0.1 <6.0.0"
-            },
-            {
-              "node-process": ">=11.2.0 <12.0.0"
-            },
-            {
-              "prelude": ">=6.0.1 <7.0.0"
-            },
-            {
-              "strings": ">=6.0.1 <7.0.0"
-            },
-            {
-              "unsafe-coerce": ">=6.0.0 <7.0.0"
-            }
-          ],
-          "build_plan": [
-            "aff",
-            "arraybuffer-types",
-            "arrays",
-            "bifunctors",
-            "console",
-            "const",
-            "contravariant",
-            "control",
-            "datetime",
-            "distributive",
-            "effect",
-            "either",
-            "enums",
-            "exceptions",
-            "exists",
-            "foldable-traversable",
-            "foreign",
-            "foreign-object",
-            "functions",
-            "functors",
-            "gen",
-            "identity",
-            "integers",
-            "invariant",
-            "js-date",
-            "lazy",
-            "lists",
-            "maybe",
-            "newtype",
-            "node-buffer",
-            "node-child-process",
-            "node-event-emitter",
-            "node-fs",
-            "node-os",
-            "node-path",
-            "node-process",
-            "node-streams",
-            "nonempty",
-            "now",
-            "nullable",
-            "numbers",
-            "ordered-collections",
-            "orders",
-            "parallel",
-            "partial",
-            "posix-types",
-            "prelude",
-            "profunctor",
-            "refs",
-            "safe-coerce",
-            "st",
-            "strings",
-            "tailrec",
-            "transformers",
-            "tuples",
-            "type-equality",
-            "typelevel-prelude",
-            "unfoldable",
-            "unsafe-coerce"
           ]
         },
         "test": {
@@ -622,8 +511,8 @@
     },
     "bifunctors": {
       "type": "registry",
-      "version": "6.0.0",
-      "integrity": "sha256-/gZwC9YhNxZNQpnHa5BIYerCGM2jeX9ukZiEvYxm5Nw=",
+      "version": "6.1.0",
+      "integrity": "sha256-6enQzl1vqnFTQZ1WX9BnoOOVdPGO9WZvVXldHckVQvY=",
       "dependencies": [
         "const",
         "either",
@@ -1054,24 +943,6 @@
         "unsafe-coerce"
       ]
     },
-    "node-child-process": {
-      "type": "registry",
-      "version": "11.1.0",
-      "integrity": "sha256-vioMNgk8p+CGwlb6T3I3TIir27el85Yg4satLE/I89w=",
-      "dependencies": [
-        "exceptions",
-        "foreign",
-        "foreign-object",
-        "functions",
-        "node-event-emitter",
-        "node-fs",
-        "node-os",
-        "node-streams",
-        "nullable",
-        "posix-types",
-        "unsafe-coerce"
-      ]
-    },
     "node-event-emitter": {
       "type": "registry",
       "version": "3.0.0",
@@ -1130,32 +1001,6 @@
         "refs",
         "strings",
         "tuples"
-      ]
-    },
-    "node-os": {
-      "type": "registry",
-      "version": "5.1.0",
-      "integrity": "sha256-K3gcu9AXanN1+qtk1900+Fi+CuO0s3/H/RMNRNgIzso=",
-      "dependencies": [
-        "arrays",
-        "bifunctors",
-        "console",
-        "control",
-        "datetime",
-        "effect",
-        "either",
-        "exceptions",
-        "foldable-traversable",
-        "foreign",
-        "foreign-object",
-        "functions",
-        "maybe",
-        "node-buffer",
-        "nullable",
-        "partial",
-        "posix-types",
-        "prelude",
-        "unsafe-coerce"
       ]
     },
     "node-path": {
@@ -1329,8 +1174,8 @@
     },
     "prelude": {
       "type": "registry",
-      "version": "6.0.1",
-      "integrity": "sha256-o8p6SLYmVPqzXZhQFd2hGAWEwBoXl1swxLG/scpJ0V0=",
+      "version": "6.0.2",
+      "integrity": "sha256-kiAPZxihtAel8uRiTNdccf4qylp/9J3jNkEHNAD0MsE=",
       "dependencies": []
     },
     "profunctor": {

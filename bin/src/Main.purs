@@ -56,9 +56,9 @@ import Node.WorkerBees.Aff.Pool (poolTraverse)
 import PureScript.CST (RecoveredParserResult(..), parseModule, toRecovered)
 import PureScript.CST.ModuleGraph (ModuleSort(..), sortModules)
 import PureScript.CST.Types (Module(..), ModuleHeader(..), Name(..))
-import Tidy.Operators (parseOperatorTable, resolveOperatorExports)
-import Tidy.Operators.Defaults (defaultOperators)
-import Tidy.Precedence (OperatorNamespace(..), PrecedenceMap)
+import Pursfmt.Operators (parseOperatorTable, resolveOperatorExports)
+import Pursfmt.Operators.Defaults (defaultOperators)
+import Pursfmt.Precedence (OperatorNamespace(..), PrecedenceMap)
 
 data FormatMode = Check | Write
 
@@ -76,7 +76,7 @@ data Command
   | Format FormatOptions ConfigOption
 
 rcFileName :: String
-rcFileName = ".tidyrc.json"
+rcFileName = ".pursfmt.yaml"
 
 parser :: ArgParser Command
 parser =
@@ -87,7 +87,7 @@ parser =
           GenerateOperators <$> pursGlobs
             <* Arg.flagHelp
     , Arg.command [ "generate-config" ]
-        "Writes a .tidyrc file to the current working directory based\non the command line options given."
+        "Writes a .pursfmt.yaml file to the current working directory based\non the command line options given."
         do
           GenerateRc <$> formatOptions
             <* Arg.flagHelp
@@ -157,7 +157,7 @@ main = launchAff_ do
   args <- Array.drop 2 <$> liftEffect Process.argv
   let
     parsedCmd =
-      Arg.parseArgs "purs-tidy" "A tidy-upper for PureScript source code." parser args
+      Arg.parseArgs "pursfmt" "A formatter for PureScript source code." parser args
 
   case parsedCmd of
     Left err -> do
@@ -186,7 +186,7 @@ main = launchAff_ do
         FormatInPlace mode cliOptions configOption numThreads printTiming globs -> do
           currentDir <- liftEffect Process.cwd
           let root = (Path.parse currentDir).root
-          srcLocation <- fold <$> liftEffect (Process.lookupEnv "TIDY_INSTALL_LOC")
+          srcLocation <- fold <$> liftEffect (Process.lookupEnv "PURSFMT_INSTALL_LOC")
           files <- expandGlobs globs
           filesWithOptions <- flip evalStateT Map.empty do
             for files \filePath -> do
@@ -308,7 +308,7 @@ getOptions cliOptions rcOptions filePath = case _ of
 
 readOperatorTable :: FilePath -> Aff (Array String)
 readOperatorTable path
-  | path == ".tidyoperators.default" = pure defaultOperators
+  | path == ".pursfmtoperators.default" = pure defaultOperators
   | otherwise = String.split (Pattern "\n") <$> FS.readTextFile UTF8 path
 
 formatInPlaceOne :: WorkerData -> WorkerInput -> Aff WorkerOutput

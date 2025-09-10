@@ -24,7 +24,7 @@ foreign import tmpdir :: String -> Effect String
 main :: Effect Unit
 main = do
   cwdPath <- cwd
-  tmpPath <- tmpdir "purs-tidy-generate-default-operators-"
+  tmpPath <- tmpdir "pursfmt-generate-default-operators-"
 
   let opts = _ { cwd = Just tmpPath }
   let genCmd = Path.concat [ cwdPath, "bin", "index.js" ] <> " generate-operators '.spago/*/*/src/**/*.purs'"
@@ -47,7 +47,7 @@ main = do
       [ "--------------------------------------------"
       , "-- This module is generated. DO NOT EDIT! --"
       , "--------------------------------------------"
-      , "module Tidy.Operators.Defaults where"
+      , "module Pursfmt.Operators.Defaults where"
       , ""
       , "defaultOperators :: Array String"
       , "defaultOperators ="
@@ -67,7 +67,7 @@ main = do
     contents =
       Array.intercalate "\n" (header <> lines <> footer)
 
-  writeTextFile UTF8 (Path.concat [ cwdPath, "src", "Tidy", "Operators", "Defaults.purs" ]) contents
+  writeTextFile UTF8 (Path.concat [ cwdPath, "src", "Pursfmt", "Operators", "Defaults.purs" ]) contents
 
 defaultPackageJson :: String
 defaultPackageJson =
@@ -89,7 +89,7 @@ defaultSpagoYaml :: String
 defaultSpagoYaml =
   """
   package:
-    name: tidy-generate-default-operators
+    name: pursfmt-generate-default-operators
     dependencies:
       - ace
       - aff

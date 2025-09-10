@@ -24,7 +24,7 @@ import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Tuple (Tuple(..))
 import Dodo (PrintOptions, twoSpaces)
 import PureScript.CST.Types (Comment(..), LineFeed, Module(..), ModuleHeader(..))
-import Tidy (class FormatError, FormatOptions, defaultFormatOptions)
+import Pursfmt (class FormatError, FormatOptions, defaultFormatOptions)
 
 directiveRegex :: Regex
 directiveRegex = unsafeRegex "\\n-- @format .+\\n" global

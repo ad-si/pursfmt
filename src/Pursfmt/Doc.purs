@@ -1,4 +1,4 @@
-module Tidy.Doc
+module Pursfmt.Doc
   ( FormatDoc(..)
   , LeadingComment(..)
   , TrailingComment(..)
@@ -49,7 +49,7 @@ import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as Dodo
 import Dodo.Internal (LocalOptions)
-import Tidy.Util (splitLines)
+import Pursfmt.Util (splitLines)
 
 data ForceBreak = ForceNone | ForceSpace | ForceBreak
 

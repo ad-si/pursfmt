@@ -1,4 +1,4 @@
-module Tidy.Precedence
+module Pursfmt.Precedence
   ( QualifiedOperator(..)
   , OperatorNamespace(..)
   , OperatorTree(..)

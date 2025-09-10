@@ -1,5 +1,5 @@
 package:
-  name: tidy-script
+  name: pursfmt-script
   build:
     strict: true
   dependencies:

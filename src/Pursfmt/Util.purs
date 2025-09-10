@@ -1,4 +1,4 @@
-module Tidy.Util where
+module Pursfmt.Util where
 
 import Data.String.Regex as Regex
 import Data.String.Regex.Flags as Flags

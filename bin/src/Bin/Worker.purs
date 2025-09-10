@@ -27,9 +27,9 @@ import Partial.Unsafe (unsafeCrashWith)
 import PureScript.CST (RecoveredParserResult(..), parseModule)
 import PureScript.CST.Errors (printParseError)
 import PureScript.CST.Parser.Monad (PositionedError)
-import Tidy (defaultFormatOptions, formatModule, toDoc)
-import Tidy.Operators (parseOperatorTable)
-import Tidy.Precedence (PrecedenceMap, remapOperators)
+import Pursfmt (defaultFormatOptions, formatModule, toDoc)
+import Pursfmt.Operators (parseOperatorTable)
+import Pursfmt.Precedence (PrecedenceMap, remapOperators)
 
 type WorkerConfig =
   { importSort :: String
@@ -48,7 +48,7 @@ toWorkerConfig options =
   { importSort: FormatOptions.importSortToString options.importSort
   , importWrap: FormatOptions.importWrapToString options.importWrap
   , indent: options.indent
-  , operatorsFile: fromMaybe ".tidyoperators.default" options.operatorsFile
+  , operatorsFile: fromMaybe ".pursfmtoperators.default" options.operatorsFile
   , ribbon: options.ribbon
   , thenPlacement: FormatOptions.thenPlacementToString options.thenPlacement
   , typeArrowPlacement: FormatOptions.typeArrowPlacementToString options.typeArrowPlacement

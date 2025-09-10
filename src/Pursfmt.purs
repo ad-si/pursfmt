@@ -1,4 +1,4 @@
-module Tidy
+module Pursfmt
   ( FormatOptions
   , defaultFormatOptions
   , TypeArrowOption(..)
@@ -35,15 +35,15 @@ import Dodo as Dodo
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.CST.Errors (RecoveredError(..))
 import PureScript.CST.Types (AppSpine(..), Binder(..), ClassFundep(..), ClassHead, Comment(..), DataCtor(..), DataHead, DataMembers(..), Declaration(..), Delimited, DelimitedNonEmpty, DoStatement(..), Export(..), Expr(..), FixityOp(..), Foreign(..), Guarded(..), GuardedExpr(..), Ident, IfThenElse, Import(..), ImportDecl(..), Instance(..), InstanceBinding(..), InstanceHead, Label, Labeled(..), LetBinding(..), LineFeed, Module(..), ModuleBody(..), ModuleHeader(..), ModuleName, Name(..), OneOrDelimited(..), Operator, PatternGuard(..), Prefixed(..), Proper, QualifiedName(..), RecordLabeled(..), RecordUpdate(..), Row(..), Separated(..), SourceStyle(..), SourceToken, Token(..), Type(..), TypeVarBinding(..), ValueBindingFields, Where(..), Wrapped(..))
-import Tidy.Doc (FormatDoc, align, alignCurrentColumn, anchor, break, flexDoubleBreak, flexGroup, flexSoftBreak, flexSpaceBreak, forceMinSourceBreaks, fromDoc, indent, joinWith, joinWithMap, leadingBlockComment, leadingLineComment, locally, softBreak, softSpace, sourceBreak, space, spaceBreak, text, trailingBlockComment, trailingLineComment)
-import Tidy.Doc (FormatDoc, toDoc) as Exports
-import Tidy.Doc as Doc
-import Tidy.Hang (HangingDoc, HangingOp(..), hang, hangApp, hangBreak, hangOps, hangWithIndent)
-import Tidy.Hang as Hang
-import Tidy.Precedence (OperatorNamespace(..), OperatorTree(..), PrecedenceMap, QualifiedOperator(..), toOperatorTree)
-import Tidy.Token (UnicodeOption(..)) as Exports
-import Tidy.Token (UnicodeOption(..), printToken)
-import Tidy.Util (nameOf, overLabel, splitLines, splitStringEscapeLines)
+import Pursfmt.Doc (FormatDoc, align, alignCurrentColumn, anchor, break, flexDoubleBreak, flexGroup, flexSoftBreak, flexSpaceBreak, forceMinSourceBreaks, fromDoc, indent, joinWith, joinWithMap, leadingBlockComment, leadingLineComment, locally, softBreak, softSpace, sourceBreak, space, spaceBreak, text, trailingBlockComment, trailingLineComment)
+import Pursfmt.Doc (FormatDoc, toDoc) as Exports
+import Pursfmt.Doc as Doc
+import Pursfmt.Hang (HangingDoc, HangingOp(..), hang, hangApp, hangBreak, hangOps, hangWithIndent)
+import Pursfmt.Hang as Hang
+import Pursfmt.Precedence (OperatorNamespace(..), OperatorTree(..), PrecedenceMap, QualifiedOperator(..), toOperatorTree)
+import Pursfmt.Token (UnicodeOption(..)) as Exports
+import Pursfmt.Token (UnicodeOption(..), printToken)
+import Pursfmt.Util (nameOf, overLabel, splitLines, splitStringEscapeLines)
 
 data TypeArrowOption
   = TypeArrowFirst

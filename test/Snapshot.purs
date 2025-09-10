@@ -39,11 +39,11 @@ import PureScript.CST (RecoveredParserResult(..), parseModule)
 import PureScript.CST.Errors (printParseError)
 import PureScript.CST.Types (Module)
 import Test.FormatDirective (defaultFormat, directiveRegex, parseDirectivesFromModule)
-import Tidy (class FormatError, FormatOptions)
-import Tidy as Tidy
-import Tidy.Operators (parseOperatorTable)
-import Tidy.Operators.Defaults (defaultOperators)
-import Tidy.Precedence (PrecedenceMap)
+import Pursfmt (class FormatError, FormatOptions)
+import Pursfmt as Pursfmt
+import Pursfmt.Operators (parseOperatorTable)
+import Pursfmt.Operators.Defaults (defaultOperators)
+import Pursfmt.Precedence (PrecedenceMap)
 
 data SnapshotResult
   = Passed
@@ -241,7 +241,9 @@ snapshotFormat accept mbPattern = do
           makeErrorResult name (error "Mismatched format options in output file.")
 
   formatModule :: forall e a. PrintOptions -> FormatOptions e a -> Module e -> String
-  formatModule opts conf = Dodo.print Dodo.plainText opts <<< Tidy.toDoc <<< Tidy.formatModule (conf { operators = operators })
+  formatModule opts conf = Dodo.print Dodo.plainText opts
+    <<< Pursfmt.toDoc
+    <<< Pursfmt.formatModule (conf { operators = operators })
 
   operators :: PrecedenceMap
   operators = parseOperatorTable defaultOperators

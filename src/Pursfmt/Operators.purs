@@ -1,4 +1,4 @@
-module Tidy.Operators where
+module Pursfmt.Operators where
 
 import Prelude
 
@@ -13,7 +13,7 @@ import PureScript.CST.Lexer as Lexer
 import PureScript.CST.TokenStream (TokenStep(..), TokenStream)
 import PureScript.CST.TokenStream as TokenStream
 import PureScript.CST.Types (Declaration(..), Export(..), FixityOp(..), IntValue(..), Module(..), ModuleBody(..), ModuleHeader(..), Name(..), Operator(..), Separated(..), Token(..), Wrapped(..))
-import Tidy.Precedence (OperatorNamespace(..), Precedence, PrecedenceMap, QualifiedOperator(..), insertOperator, lookupOperator, remapOperators)
+import Pursfmt.Precedence (OperatorNamespace(..), Precedence, PrecedenceMap, QualifiedOperator(..), insertOperator, lookupOperator, remapOperators)
 
 parseOperatorTable :: Array String -> PrecedenceMap
 parseOperatorTable = foldr (uncurry insertOperator) Map.empty <<< Array.mapMaybe parseOperatorPrec

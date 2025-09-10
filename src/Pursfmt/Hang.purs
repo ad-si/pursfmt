@@ -1,4 +1,4 @@
-module Tidy.Hang
+module Pursfmt.Hang
   ( HangingDoc
   , HangingOp(..)
   , hang
@@ -21,7 +21,7 @@ import Data.Maybe (maybe)
 import Data.Tuple (Tuple(..), fst, snd)
 import Dodo (Doc)
 import Dodo as Dodo
-import Tidy.Doc (ForceBreak(..), FormatDoc(..), LeadingComment(..), TrailingComment(..), align, break, breakDoc, flatten, flexGroup, forceMinSourceBreaks, indent)
+import Pursfmt.Doc (ForceBreak(..), FormatDoc(..), LeadingComment(..), TrailingComment(..), align, break, breakDoc, flatten, flexGroup, forceMinSourceBreaks, indent)
 
 data HangingDoc a
   = HangBreak (FormatDoc a)
