@@ -46,6 +46,7 @@ inDoBlock = do
 complexExpressions =
   if (someFunction arg1 arg2 >>= anotherFunction) then (complexResult >>= transform >>= validate)
   else (fallbackComputation >>= handleError)
+
 -- @format --then-same-line
 module ThenPlacementSameLine where
 

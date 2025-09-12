@@ -19,6 +19,7 @@ test3 =
   else if condition2 then value2
   else if condition3 then value3
   else defaultValue
+
 -- @format --then-new-line
 module ThenPlacementNewLineDetailed where
 

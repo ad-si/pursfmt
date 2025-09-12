@@ -11,6 +11,7 @@ test2 =
     if secondLongCondition then result1
     else result2
   else alternativeResult
+
 -- @format --then-new-line --width 40
 module ThenPlacementDifference where
 
