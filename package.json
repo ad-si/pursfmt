@@ -45,10 +45,9 @@
   },
   "homepage": "https://github.com/ad-si/pursfmt#readme",
   "devDependencies": {
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.25.9",
     "purescript": "^0.15.15",
-    "purs-backend-es": "^1.4.2",
-    "pursfmt": "^0.11.0",
+    "purs-backend-es": "^1.4.3",
     "spago": "^0.93.43"
   }
 }
