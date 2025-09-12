@@ -1,13 +1,16 @@
 # Pursfmt
 
-A syntax formatter for PureScript.
+Configurable syntax formatter for PureScript.
 
 
 ## Install
 
 ```sh
-npm install -g pursfmt
+npm install --save-dev pursfmt
 ```
+
+Do not install it globally, so that different PureScript projects can use
+different versions of `pursfmt`.
 
 Also available for [Nix](https://nixos.org/) via
 [Nixpkgs 22.11+](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=pursfmt)
@@ -143,14 +146,6 @@ The PureScript IDE plugin for VS Code supports `pursfmt` as a built-in formatter
 
 
 ## Development
-
-### Requirements
-
-- `purs`: 0.15
-- `spago`: 0.20
-- `node`: 14
-- `esbuild`: 0.14
-
 
 ### Running `bin`
 

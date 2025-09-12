@@ -2,7 +2,7 @@
   "name": "pursfmt",
   "version": "0.11.0",
   "type": "module",
-  "description": "A syntax formatter for PureScript.",
+  "description": "Configurable syntax formatter for PureScript.",
   "bin": {
     "pursfmt": "bin/index.js"
   },

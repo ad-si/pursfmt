@@ -1,6 +1,6 @@
 package:
   name: pursfmt
-  description: A syntax formatter for PureScript.
+  description: Configurable syntax formatter for PureScript.
   publish:
     version: 0.11.1
     license: MIT
