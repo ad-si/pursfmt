@@ -25,6 +25,7 @@ type FormatOptions =
   , typeArrowPlacement :: TypeArrowOption
   , unicode :: UnicodeOption
   , width :: Maybe Int
+  , whereClauseSameLine :: Boolean
   }
 
 defaults :: FormatOptions
@@ -38,6 +39,7 @@ defaults =
   , typeArrowPlacement: TypeArrowFirst
   , unicode: UnicodeSource
   , width: Nothing
+  , whereClauseSameLine: false
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -104,6 +106,10 @@ formatOptions =
           "The maximum width of the document in columns.\nDefaults to no maximum."
           # Arg.int
           # Arg.optional
+    , whereClauseSameLine:
+       Arg.flag [ "--where-clause-same-line", "-wcsl" ]
+        "Put source code directly after \"where\" instead of the next line."
+        # Arg.boolean
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -133,6 +139,7 @@ fromJson json = do
   typeArrowPlacement <- traverse typeArrowPlacementFromString =<< obj .:? "typeArrowPlacement"
   unicode <- traverse unicodeFromString =<< obj .:? "unicode"
   width <- obj .:? "width"
+  whereClauseSameLine <- obj .:? "whereClauseSameLine"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -143,6 +150,7 @@ fromJson json = do
     , typeArrowPlacement: fromMaybe defaults.typeArrowPlacement typeArrowPlacement
     , unicode: fromMaybe defaults.unicode unicode
     , width: width <|> defaults.width
+    , whereClauseSameLine: fromMaybe defaults.whereClauseSameLine whereClauseSameLine
     }
 
 toJson :: FormatOptions -> Json
@@ -157,6 +165,7 @@ toJson options =
     # extend (assoc "typeArrowPlacement" (typeArrowPlacementToString options.typeArrowPlacement))
     # extend (assoc "unicode" (unicodeToString options.unicode))
     # extend (assoc "width" (maybe jsonNull encodeJson options.width))
+    # extend (assoc "whereClauseSameLine" (encodeJson options.whereClauseSameLine))
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of
