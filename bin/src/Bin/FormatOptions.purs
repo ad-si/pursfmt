@@ -28,6 +28,7 @@ type FormatOptions =
   , unicode :: UnicodeOption
   , width :: Maybe Int
   , whereClauseSameLine :: Boolean
+  , compactRecords :: Boolean
   }
 
 -- Newtype wrapper for ToYAML instance
@@ -47,6 +48,7 @@ defaults =
   , unicode: UnicodeSource
   , width: Nothing
   , whereClauseSameLine: false
+  , compactRecords: false
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -117,6 +119,10 @@ formatOptions =
        Arg.flag [ "--where-clause-same-line", "-wcsl" ]
         "Put source code directly after \"where\" instead of the next line."
         # Arg.boolean
+    , compactRecords:
+        Arg.flag [ "--compact-records", "-cr" ]
+          "Format records without additional space at the start and end of the curly brackets."
+          # Arg.boolean
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -147,6 +153,7 @@ fromJson json = do
   unicode <- traverse unicodeFromString =<< obj .:? "unicode"
   width <- obj .:? "width"
   whereClauseSameLine <- obj .:? "whereClauseSameLine"
+  compactRecords <- obj .:? "compactRecords"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -158,6 +165,7 @@ fromJson json = do
     , unicode: fromMaybe defaults.unicode unicode
     , width: width <|> defaults.width
     , whereClauseSameLine: fromMaybe defaults.whereClauseSameLine whereClauseSameLine
+    , compactRecords: fromMaybe defaults.compactRecords compactRecords
     }
 
 toJson :: FormatOptions -> Json
@@ -173,6 +181,7 @@ toJson options =
     # extend (assoc "unicode" (unicodeToString options.unicode))
     # extend (assoc "width" (maybe jsonNull encodeJson options.width))
     # extend (assoc "whereClauseSameLine" (encodeJson options.whereClauseSameLine))
+    # extend (assoc "compactRecords" options.compactRecords)
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of

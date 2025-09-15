@@ -116,6 +116,7 @@ parseDirectivesFromModule (Module { header: ModuleHeader header, body }) =
         , importSort: opts.importSort
         , importWrap: opts.importWrap
         , whereClauseSameLine: opts.whereClauseSameLine
+        , compactRecords: opts.compactRecords
         }
     }
     where
