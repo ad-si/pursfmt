@@ -2,7 +2,7 @@ package:
   name: pursfmt
   description: Configurable syntax formatter for PureScript.
   publish:
-    version: 0.11.1
+    version: 0.12.0
     license: MIT
     location:
       githubOwner: ad-si
