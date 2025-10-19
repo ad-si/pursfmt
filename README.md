@@ -69,6 +69,12 @@ Some common options include:
     which defaults to arrow-first.
 
 You can generate a `.pursfmt.yaml` using the `generate-config` command.
+For example:
+
+```sh
+pursfmt generate-config --indent 2 --width 80 --arrow-last
+```
+
 If a `.pursfmt.yaml` file is found, it will be used in lieu of CLI arguments.
 
 

@@ -12,7 +12,9 @@ import Data.Argonaut.Decode (JsonDecodeError(..), decodeJson, (.:?))
 import Data.Argonaut.Encode (assoc, encodeJson, extend)
 import Data.Either (Either)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
+import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
+import Data.YAML.Foreign.Encode (class ToYAML, entry, object)
 import Pursfmt (ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
 type FormatOptions =
@@ -26,6 +28,11 @@ type FormatOptions =
   , unicode :: UnicodeOption
   , width :: Maybe Int
   }
+
+-- Newtype wrapper for ToYAML instance
+newtype FormatOptionsYAML = FormatOptionsYAML FormatOptions
+
+derive instance Newtype FormatOptionsYAML _
 
 defaults :: FormatOptions
 defaults =
@@ -214,3 +221,17 @@ importSortToString :: ImportSortOption -> String
 importSortToString = case _ of
   ImportSortSource -> "source"
   ImportSortIde -> "ide"
+
+instance toYAMLFormatOptions :: ToYAML FormatOptionsYAML where
+  toYAML (FormatOptionsYAML options) =
+    object
+      [ "importSort" `entry` importSortToString options.importSort
+      , "importWrap" `entry` importWrapToString options.importWrap
+      , "indent" `entry` options.indent
+      , "operatorsFile" `entry` options.operatorsFile
+      , "ribbon" `entry` options.ribbon
+      , "thenPlacement" `entry` thenPlacementToString options.thenPlacement
+      , "typeArrowPlacement" `entry` typeArrowPlacementToString options.typeArrowPlacement
+      , "unicode" `entry` unicodeToString options.unicode
+      , "width" `entry` options.width
+      ]

@@ -24,6 +24,7 @@ package:
     - prelude: ">=6.0.1 <7.0.0"
     - strings: ">=6.0.1 <7.0.0"
     - tuples: ">=7.0.0 <8.0.0"
+    - yaml-next: ">=3.1.1 <4.0.0"
   test:
     main: Test.Main
     dependencies:
@@ -32,4 +33,11 @@ package:
       - node-glob-basic
       - node-path
       - pursfmt-bin: "*"
-workspace: {}
+
+workspace:
+  packageSet:
+    registry: 66.9.2
+  extraPackages:
+    yaml-next:
+      git: https://github.com/archaeron/purescript-yaml-next
+      ref: v3.1.1
