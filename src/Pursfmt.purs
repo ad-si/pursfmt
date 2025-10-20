@@ -77,6 +77,7 @@ type FormatOptions e a =
   , operators :: PrecedenceMap
   , importSort :: ImportSortOption
   , importWrap :: ImportWrapOption
+  , whereClauseSameLine :: Boolean
   }
 
 defaultFormatOptions :: forall e a. FormatError e => FormatOptions e a
@@ -88,6 +89,7 @@ defaultFormatOptions =
   , operators: Map.empty
   , importSort: ImportSortSource
   , importWrap: ImportWrapSource
+  , whereClauseSameLine: false
   }
 
 class FormatError e where
@@ -1100,8 +1102,10 @@ formatPatternGuard conf (PatternGuard { binder, expr }) = case binder of
 
 formatWhere :: forall e a. Format (Tuple SourceToken (NonEmptyArray (LetBinding e))) e a
 formatWhere conf (Tuple kw bindings) =
-  formatToken conf kw
-    `break` formatLetGroups conf (NonEmptyArray.toArray bindings)
+  if conf.whereClauseSameLine then
+    formatToken conf kw `space` (alignCurrentColumn $ formatLetGroups conf (NonEmptyArray.toArray bindings))
+  else
+    formatToken conf kw `break` (formatLetGroups conf (NonEmptyArray.toArray bindings))
 
 formatLetBinding :: forall e a. Format (LetBinding e) e a
 formatLetBinding conf = case _ of
