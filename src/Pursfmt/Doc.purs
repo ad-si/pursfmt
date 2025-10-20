@@ -41,8 +41,10 @@ import Prelude
 import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Foldable (class Foldable, foldl, intercalate)
+import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Monoid (power)
+import Data.Show.Generic (genericShow)
 import Data.String as String
 import Data.String.CodeUnits as SCU
 import Data.Tuple (Tuple(..))
@@ -52,6 +54,9 @@ import Dodo.Internal (LocalOptions)
 import Pursfmt.Util (splitLines)
 
 data ForceBreak = ForceNone | ForceSpace | ForceBreak
+instance showForceBreak :: Show ForceBreak where
+  show = genericShow
+derive instance genericForceBreak :: Generic ForceBreak _
 
 derive instance eqForceBreak :: Eq ForceBreak
 derive instance ordForceBreak :: Ord ForceBreak
