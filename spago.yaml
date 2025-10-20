@@ -36,8 +36,4 @@ package:
 
 workspace:
   packageSet:
-    registry: 66.9.2
-  extraPackages:
-    yaml-next:
-      git: https://github.com/archaeron/purescript-yaml-next
-      ref: v3.1.1
+    registry: 67.0.0

@@ -497,7 +497,7 @@
     },
     "package_set": {
       "address": {
-        "registry": "66.9.2"
+        "registry": "67.0.0"
       },
       "compiler": ">=0.15.15 <0.16.0",
       "content": {
@@ -910,7 +910,7 @@
         "selection-foldable": "0.2.0",
         "selective-functors": "1.0.1",
         "semirings": "7.0.0",
-        "shuffle": "1.1.0",
+        "shuffle": "2.0.0",
         "signal": "13.0.0",
         "simple-emitter": "3.0.1",
         "simple-i18n": "2.0.1",
@@ -1032,6 +1032,7 @@
         "which": "2.0.0",
         "whine-core": "0.0.32",
         "xterm": "1.0.0",
+        "yaml-next": "3.1.1",
         "yoga-fetch": "1.0.1",
         "yoga-json": "5.1.0",
         "yoga-om": "0.1.0",
@@ -1045,12 +1046,7 @@
         "zipperarray": "2.0.0"
       }
     },
-    "extra_packages": {
-      "yaml-next": {
-        "git": "https://github.com/archaeron/purescript-yaml-next",
-        "ref": "v3.1.1"
-      }
-    }
+    "extra_packages": {}
   },
   "packages": {
     "aff": {
@@ -2069,9 +2065,9 @@
       ]
     },
     "yaml-next": {
-      "type": "git",
-      "url": "https://github.com/archaeron/purescript-yaml-next",
-      "rev": "e2faab7b8cb81ce28711704cf274f12087f87502",
+      "type": "registry",
+      "version": "3.1.1",
+      "integrity": "sha256-YYuGTD7TdddyF/pQp4qMEEA4Ts7X1bxnRBXz71bVZfo=",
       "dependencies": [
         "argonaut-core",
         "arrays",
