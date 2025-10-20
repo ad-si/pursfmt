@@ -115,6 +115,7 @@ parseDirectivesFromModule (Module { header: ModuleHeader header, body }) =
         , typeArrowPlacement: opts.typeArrowPlacement
         , importSort: opts.importSort
         , importWrap: opts.importWrap
+        , letClauseSameLine: opts.letClauseSameLine
         }
     }
     where

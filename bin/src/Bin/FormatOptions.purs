@@ -27,6 +27,7 @@ type FormatOptions =
   , typeArrowPlacement :: TypeArrowOption
   , unicode :: UnicodeOption
   , width :: Maybe Int
+  , letClauseSameLine :: Boolean
   }
 
 -- Newtype wrapper for ToYAML instance
@@ -45,6 +46,7 @@ defaults =
   , typeArrowPlacement: TypeArrowFirst
   , unicode: UnicodeSource
   , width: Nothing
+  , letClauseSameLine: false
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -111,6 +113,10 @@ formatOptions =
           "The maximum width of the document in columns.\nDefaults to no maximum."
           # Arg.int
           # Arg.optional
+    , letClauseSameLine:
+        Arg.flag [ "--let-clause-same-line", "-lcsl" ]
+          "Put source code directly after \"let\" and \"in\" instead of the next line."
+          # Arg.boolean
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -140,6 +146,7 @@ fromJson json = do
   typeArrowPlacement <- traverse typeArrowPlacementFromString =<< obj .:? "typeArrowPlacement"
   unicode <- traverse unicodeFromString =<< obj .:? "unicode"
   width <- obj .:? "width"
+  letClauseSameLine <- obj .:? "letClauseSameLine"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -150,6 +157,7 @@ fromJson json = do
     , typeArrowPlacement: fromMaybe defaults.typeArrowPlacement typeArrowPlacement
     , unicode: fromMaybe defaults.unicode unicode
     , width: width <|> defaults.width
+    , letClauseSameLine: fromMaybe defaults.letClauseSameLine letClauseSameLine
     }
 
 toJson :: FormatOptions -> Json
@@ -164,6 +172,7 @@ toJson options =
     # extend (assoc "typeArrowPlacement" (typeArrowPlacementToString options.typeArrowPlacement))
     # extend (assoc "unicode" (unicodeToString options.unicode))
     # extend (assoc "width" (maybe jsonNull encodeJson options.width))
+    # extend (assoc "letClauseSameLine" options.letClauseSameLine)
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of
