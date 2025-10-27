@@ -1,0 +1,92 @@
+-- @format --where-clause-same-line
+module WhereClauseSameLine where
+
+-- Simple where clause with single binding (should stay on same line)
+simple = result
+  where helper = 42
+
+-- Single binding inline
+inline = x + y
+  where y = 10
+
+-- Where clause with multiple bindings (will still break)
+multiple = result
+  where
+  a = 1
+  b = 2
+  c = a + b
+
+-- Where clause with type signatures (will still break)
+withTypes = result
+  where
+  helper :: Int -> Int
+  helper x = x + 1
+
+  value :: Int
+  value = 42
+
+-- Nested where clauses
+nested = outer
+  where
+  outer = inner + 1
+    where inner = 10
+
+-- Where in case branch (single binding)
+caseWhereSingle = case x of
+  Just a -> result
+    where helper = a + 1
+  Nothing -> 0
+
+-- Where in case branch (multiple bindings)
+caseWhereMultiple = case x of
+  Just a -> result
+    where
+    helper = a + 1
+    other = a * 2
+  Nothing -> 0
+
+-- Where in guarded expression (single binding)
+guardWhereSingle x
+  | x > 0 = positive
+      where positive = x * 2
+  | otherwise = negative
+      where negative = x * (-1)
+
+-- Where in guarded expression (multiple bindings)
+guardWhereMultiple x
+  | x > 0 = positive
+      where
+      positive = x * 2
+      doubled = x * 4
+  | otherwise = negative
+      where
+      negative = x * (-1)
+      halved = x / 2
+
+-- Where with let bindings (single binding body)
+withLet = result
+  where
+  helper =
+    let x = 1
+        y = 2
+    in x + y
+
+-- Where with do notation (single binding body)
+withDo = result
+  where
+  helper = do
+    a <- getSomething
+    b <- getSomethingElse
+    pure (a + b)
+
+-- Multiple simple where clauses in pattern matching
+multiPattern 0 = zero
+  where zero = "zero"
+multiPattern 1 = one
+  where one = "one"
+multiPattern _ = other
+  where other = "other"
+
+-- Long single binding
+longWhere = result
+  where veryLongHelperFunctionName x y z = x + y + z
