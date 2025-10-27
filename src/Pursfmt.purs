@@ -178,7 +178,7 @@ formatWithComments leading trailing doc =
     (doc <> foldr (formatComment trailingLineComment trailingBlockComment) mempty trailing)
     leading
 
-formatToken :: forall a r. { unicode :: UnicodeOption | r } -> SourceToken -> FormatDoc a
+formatToken :: forall a r. { unicode :: UnicodeOption| r } -> SourceToken -> FormatDoc a
 formatToken conf tok = formatWithComments tok.leadingComments tok.trailingComments tokDoc
   where
   tokStr = printToken conf.unicode tok.value
@@ -864,9 +864,9 @@ formatRow openSpace closeSpace conf (Wrapped { open, value: Row { labels, tail }
       closeSp = if conf.compactRecords then space else closeSpace
       sepBreak = if conf.compactRecords then spaceBreak else softBreak
     in
-      formatToken conf open `openSp`
-        (listPart `sepBreak` tailPart)
-      `closeSp` formatToken conf close
+      formatToken conf open
+        `openSp` (listPart `sepBreak` tailPart)
+        `closeSp` formatToken conf close
 
 formatRowLabeled :: forall e a. Format (Labeled (Name Label) (Type e)) e a
 formatRowLabeled conf (Labeled { label, separator, value }) =
@@ -1129,26 +1129,27 @@ formatExprLet conf letIn =
       inKeywordString = printToken conf.unicode letIn.in.value
     in
       Doc.fromDoc
-        (
-          ( Dodo.text letKeywordString <> Dodo.space <>
+        ( ( Dodo.text letKeywordString <> Dodo.space <>
               (Doc.toDoc (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))) -- Inlined bindingsDoc -> dodoBindingsDoc
           )
-          `Dodo.appendBreak`
-          ( Dodo.text inKeywordString <> Dodo.space <> Dodo.space <>
-              (Doc.toDoc (formatExpr conf letIn.body))
-          )
+            `Dodo.appendBreak`
+              ( Dodo.text inKeywordString <> Dodo.space <> Dodo.space <>
+                  (Doc.toDoc (formatExpr conf letIn.body))
+              )
         )
   else
-    Hang.toFormatDoc (hangBreak (
-        formatToken conf letIn.keyword
-        `spaceBreak`
-          indent (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))
-        `spaceBreak`
-          ( formatToken conf letIn.in
+    Hang.toFormatDoc
+      ( hangBreak
+          ( formatToken conf letIn.keyword
               `spaceBreak`
-                indent (flexGroup (formatExpr conf letIn.body))
+                indent (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))
+              `spaceBreak`
+                ( formatToken conf letIn.in
+                    `spaceBreak`
+                      indent (flexGroup (formatExpr conf letIn.body))
+                )
           )
-      ))
+      )
 
 formatLetBinding :: forall e a. Format (LetBinding e) e a
 formatLetBinding conf = case _ of
@@ -1393,7 +1394,7 @@ formatListWithDelimiters origOpenSpace origCloseSpace origAlignment grouped form
         combined = fmtOpen `origOpenSpace` elems `origCloseSpace` fmtClose
       in
         case grouped of
-          Grouped    -> flexGroup combined
+          Grouped -> flexGroup combined
           NotGrouped -> combined
 
 formatListElem :: forall e a b. Int -> Format b e a -> Format b e a

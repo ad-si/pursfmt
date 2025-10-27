@@ -118,9 +118,9 @@ formatOptions =
           # Arg.int
           # Arg.optional
     , whereClauseSameLine:
-       Arg.flag [ "--where-clause-same-line", "-wcsl" ]
-        "Put source code directly after \"where\" instead of the next line."
-        # Arg.boolean
+        Arg.flag [ "--where-clause-same-line", "-wcsl" ]
+          "Put source code directly after \"where\" instead of the next line."
+          # Arg.boolean
     , compactRecords:
         Arg.flag [ "--compact-records", "-cr" ]
           "Format records without additional space at the start and end of the curly brackets."

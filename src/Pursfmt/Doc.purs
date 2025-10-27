@@ -54,8 +54,10 @@ import Dodo.Internal (LocalOptions)
 import Pursfmt.Util (splitLines)
 
 data ForceBreak = ForceNone | ForceSpace | ForceBreak
+
 instance showForceBreak :: Show ForceBreak where
   show = genericShow
+
 derive instance genericForceBreak :: Generic ForceBreak _
 
 derive instance eqForceBreak :: Eq ForceBreak
