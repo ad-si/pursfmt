@@ -1,0 +1,113 @@
+module RecordFormatting where
+
+-- Simple record type (default: with spacing)
+type Person = { name :: String, age :: Int }
+
+-- Record type with many fields
+type Employee =
+  { firstName :: String
+  , lastName :: String
+  , age :: Int
+  , department :: String
+  , salary :: Number
+  , isActive :: Boolean
+  }
+
+-- Nested record types
+type Address = { street :: String, city :: String, country :: String }
+type PersonWithAddress = { name :: String, address :: Address }
+
+-- Record with row polymorphism
+type RowPoly r = { name :: String | r }
+
+-- Empty record type
+type EmptyRecord = {}
+
+-- Record value
+person :: Person
+person = { name: "Alice", age: 30 }
+
+-- Record with many fields (value)
+employee :: Employee
+employee =
+  { firstName: "John"
+  , lastName: "Doe"
+  , age: 35
+  , department: "Engineering"
+  , salary: 75000.0
+  , isActive: true
+  }
+
+-- Nested record value
+addressValue :: Address
+addressValue = { street: "123 Main St", city: "Springfield", country: "USA" }
+
+personWithAddress :: PersonWithAddress
+personWithAddress = { name: "Bob", address: addressValue }
+
+-- Record update
+updatePerson :: Person -> Person
+updatePerson p = p { age = p.age + 1 }
+
+-- Multiple record updates
+updateMultiple :: Person -> Person
+updateMultiple p = p { name = "Updated", age = 99 }
+
+-- Nested record update
+updateNested :: PersonWithAddress -> PersonWithAddress
+updateNested p = p { address { city = "New City" } }
+
+-- Record pattern matching
+getName :: forall r. { name :: String | r } -> String
+getName { name } = name
+
+getNameAndAge :: Person -> String
+getNameAndAge { name, age } = name <> " is " <> show age
+
+-- Record in array
+people :: Array Person
+people = [ { name: "Alice", age: 30 }, { name: "Bob", age: 25 } ]
+
+-- Record in case expression
+describeAge :: Person -> String
+describeAge person = case person of
+  { age } | age < 18 -> "Minor"
+  { age } | age >= 18 && age < 65 -> "Adult"
+  { age } -> "Senior"
+
+-- Record with type annotation in binding
+annotatedRecord :: { x :: Int, y :: Int }
+annotatedRecord = { x: 10, y: 20 }
+
+-- Row type (open record)
+type OpenRow r = ( name :: String, age :: Int | r )
+
+-- Record type using row
+type PersonFromRow = { OpenRow () }
+
+-- Complex nested structure
+type Complex =
+  { outer ::
+      { inner ::
+          { deep :: String
+          , value :: Int
+          }
+      , middle :: Boolean
+      }
+  , simple :: String
+  }
+
+-- Record with function types
+type Actions =
+  { create :: String -> Effect Unit
+  , update :: String -> String -> Effect Unit
+  , delete :: String -> Effect Unit
+  }
+
+-- Record puns in pattern
+displayPerson :: Person -> String
+displayPerson { name, age } = name <> ": " <> show age
+
+-- Record puns in construction
+makePerson :: String -> Int -> Person
+makePerson name age = { name, age }

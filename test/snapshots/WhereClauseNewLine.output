@@ -1,0 +1,80 @@
+module WhereClauseNewLine where
+
+-- Simple where clause with single binding (default: new line)
+simple = result
+  where
+  helper = 42
+
+-- Where clause with multiple bindings
+multiple = result
+  where
+  a = 1
+  b = 2
+  c = a + b
+
+-- Where clause with type signatures
+withTypes = result
+  where
+  helper :: Int -> Int
+  helper x = x + 1
+
+  value :: Int
+  value = 42
+
+-- Nested where clauses
+nested = outer
+  where
+  outer = inner + 1
+    where
+    inner = 10
+
+-- Where in case branch
+caseWhere = case x of
+  Just a -> result
+    where
+    helper = a + 1
+  Nothing -> 0
+
+-- Where in guarded expression
+guardWhere x
+  | x > 0 = positive
+      where
+      positive = x * 2
+  | otherwise = negative
+      where
+      negative = x * (-1)
+
+-- Where with let bindings
+withLet = result
+  where
+  helper =
+    let
+      x = 1
+      y = 2
+    in
+      x + y
+
+-- Where with do notation
+withDo = result
+  where
+  helper = do
+    a <- getSomething
+    b <- getSomethingElse
+    pure (a + b)
+
+-- Multiple where clauses in pattern matching
+multiPattern 0 = zero
+  where
+  zero = "zero"
+multiPattern 1 = one
+  where
+  one = "one"
+multiPattern _ = other
+  where
+  other = "other"
+
+-- Long where clause that might wrap
+longWhere = result
+  where
+  veryLongHelperFunctionNameThatMightCauseWrapping x y z = x + y + z
+  anotherLongName a b = a * b
