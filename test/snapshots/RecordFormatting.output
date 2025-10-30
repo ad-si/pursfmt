@@ -18,7 +18,7 @@ type Address = { street :: String, city :: String, country :: String }
 type PersonWithAddress = { name :: String, address :: Address }
 
 -- Record with row polymorphism
-type RowPoly r = { name :: String| r }
+type RowPoly r = { name :: String | r }
 
 -- Empty record type
 type EmptyRecord = {}
@@ -58,7 +58,7 @@ updateNested :: PersonWithAddress -> PersonWithAddress
 updateNested p = p { address { city = "New City" } }
 
 -- Record pattern matching
-getName :: forall r. { name :: String| r } -> String
+getName :: forall r. { name :: String | r } -> String
 getName { name } = name
 
 getNameAndAge :: Person -> String
@@ -80,7 +80,7 @@ annotatedRecord :: { x :: Int, y :: Int }
 annotatedRecord = { x: 10, y: 20 }
 
 -- Row type (open record)
-type OpenRow r = (name :: String, age :: Int| r)
+type OpenRow r = (name :: String, age :: Int | r)
 
 -- Record type using row
 type PersonFromRow = { OpenRow () }

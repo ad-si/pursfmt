@@ -863,7 +863,7 @@ formatRow openSpace closeSpace conf (Wrapped { open, value: Row { labels, tail }
 
       openSp = if conf.compactRecords then space else openSpace
       closeSp = if conf.compactRecords then space else closeSpace
-      sepBreak = if conf.compactRecords then spaceBreak else softBreak
+      sepBreak = if conf.compactRecords then softBreak else spaceBreak
     in
       formatToken conf open
         `openSp` (listPart `sepBreak` tailPart)
