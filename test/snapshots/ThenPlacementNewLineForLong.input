@@ -1,4 +1,4 @@
--- @format --then-new-line-for-long --width 40
+-- @format --then-new-line-for-long-line --width 40
 module ThenPlacementNewLineForLong where
 
 shortExample =

@@ -1,4 +1,4 @@
--- @format --then-new-line
+-- @format --then-new-line-always
 module ThenPlacementNewLine where
 
 -- Simple if-then-else

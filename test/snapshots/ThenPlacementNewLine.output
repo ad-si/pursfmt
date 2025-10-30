@@ -47,7 +47,7 @@ complexExpressions =
   if (someFunction arg1 arg2 >>= anotherFunction) then (complexResult >>= transform >>= validate)
   else (fallbackComputation >>= handleError)
 
--- @format --then-new-line
+-- @format --then-new-line-always
 module ThenPlacementNewLine where
 
 -- Simple if-then-else

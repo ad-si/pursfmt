@@ -12,7 +12,7 @@ test2 =
     else result2
   else alternativeResult
 
--- @format --then-new-line --width 40
+-- @format --then-new-line-always --width 40
 module ThenPlacementDifference where
 
 -- This should trigger the difference with narrow width

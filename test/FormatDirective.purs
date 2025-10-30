@@ -23,6 +23,7 @@ import Data.String.Regex.Flags (global)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Data.Tuple (Tuple(..))
 import Dodo (PrintOptions, twoSpaces)
+import Partial.Unsafe (unsafeCrashWith)
 import PureScript.CST.Types (Comment(..), LineFeed, Module(..), ModuleHeader(..))
 import Pursfmt (class FormatError, FormatOptions, defaultFormatOptions)
 
@@ -89,7 +90,7 @@ parseDirectivesFromModule (Module { header: ModuleHeader header, body }) =
     Comment original | String.contains (String.Pattern "@format") original -> do
       let input = String.split (String.Pattern " ") $ String.drop 11 $ String.trim original
       case parseFormatOptions input of
-        Left _ -> Nothing
+        Left err -> unsafeCrashWith $ "Invalid format directive: " <> original <> "\n" <> err
         Right directive -> pure $ Tuple original directive
     _ -> Nothing
 

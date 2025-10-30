@@ -1,4 +1,4 @@
--- @format --then-new-line
+-- @format --then-new-line-always
 module ThenPlacementNewLineDetailed where
 
 -- Case that should show difference: multi-line condition with then on new line
