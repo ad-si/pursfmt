@@ -1,0 +1,41 @@
+module ThenPlacementNewLineForLong where
+
+shortExample =
+  if cond then val else fallback
+
+longExample =
+  if (condA || condB) && condC then someVeryVeryLongValue else someOtherLongFallbackValue
+
+longConditionExample =
+  if conditionBarelyWithinLimitButLong then resultValue
+  else fallbackValue
+
+nestedExample =
+  if outerConditionBarelyWithinWidthLimit then
+    if innerConditionJustWithinLimitButLengthy then innerResult
+    else innerFallback
+  else outerFallback
+
+-- @format --then-new-line-for-long --width 40
+module ThenPlacementNewLineForLong where
+
+shortExample =
+  if cond then val else fallback
+
+longExample =
+  if (condA || condB) && condC
+  then someVeryVeryLongValue
+  else someOtherLongFallbackValue
+
+longConditionExample =
+  if conditionBarelyWithinLimitButLong
+  then resultValue
+  else fallbackValue
+
+nestedExample =
+  if outerConditionBarelyWithinWidthLimit
+  then
+    if innerConditionJustWithinLimitButLengthy
+    then innerResult
+    else innerFallback
+  else outerFallback

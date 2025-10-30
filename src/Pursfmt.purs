@@ -35,7 +35,7 @@ import Dodo as Dodo
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.CST.Errors (RecoveredError(..))
 import PureScript.CST.Types (AppSpine(..), Binder(..), ClassFundep(..), ClassHead, Comment(..), DataCtor(..), DataHead, DataMembers(..), Declaration(..), Delimited, DelimitedNonEmpty, DoStatement(..), Export(..), Expr(..), FixityOp(..), Foreign(..), Guarded(..), GuardedExpr(..), Ident, IfThenElse, Import(..), ImportDecl(..), Instance(..), InstanceBinding(..), InstanceHead, Label, Labeled(..), LetBinding(..), LetIn, LineFeed, Module(..), ModuleBody(..), ModuleHeader(..), ModuleName, Name(..), OneOrDelimited(..), Operator, PatternGuard(..), Prefixed(..), Proper, QualifiedName(..), RecordLabeled(..), RecordUpdate(..), Row(..), Separated(..), SourceStyle(..), SourceToken, Token(..), Type(..), TypeVarBinding(..), ValueBindingFields, Where(..), Wrapped(..))
-import Pursfmt.Doc (FormatDoc, align, alignCurrentColumn, anchor, break, flexDoubleBreak, flexGroup, flexSoftBreak, flexSpaceBreak, forceMinSourceBreaks, fromDoc, indent, joinWith, joinWithMap, leadingBlockComment, leadingLineComment, locally, softBreak, softSpace, sourceBreak, space, spaceBreak, text, trailingBlockComment, trailingLineComment)
+import Pursfmt.Doc (FormatDoc, align, alignCurrentColumn, anchor, break, flexDoubleBreak, flexGroup, flexSoftBreak, flexSpaceBreak, flexSpaceOrBreak, forceMinSourceBreaks, fromDoc, indent, joinWith, joinWithMap, leadingBlockComment, leadingLineComment, locally, softBreak, softSpace, sourceBreak, space, spaceBreak, text, trailingBlockComment, trailingLineComment)
 import Pursfmt.Doc (FormatDoc, toDoc) as Exports
 import Pursfmt.Doc as Doc
 import Pursfmt.Hang (HangingDoc, HangingOp(..), hang, hangApp, hangBreak, hangOps, hangWithIndent)
@@ -53,7 +53,8 @@ derive instance eqTypeArrowOption :: Eq TypeArrowOption
 
 data ThenPlacementOption
   = ThenSameLine
-  | ThenNewLine
+  | ThenNewLineAlways
+  | ThenNewLineForLongLine
 
 derive instance eqThenPlacementOption :: Eq ThenPlacementOption
 
@@ -1016,37 +1017,51 @@ toElseIfChain ifte = go (pure (IfThen ifte.keyword ifte.cond ifte.then ifte.true
 formatElseIfChain :: forall e a. Format (NonEmptyArray (ElseIfChain e)) e a
 formatElseIfChain conf = flexGroup <<< joinWithMap spaceBreak case _ of
   IfThen kw1 cond kw2 expr ->
-    case conf.thenPlacement of
-      ThenSameLine ->
+    let
+      condDocDefault =
         formatToken conf kw1
           `flexSpaceBreak`
             indent (anchor (flexGroup (formatExpr conf cond)))
+      condDocLong =
+        formatToken conf kw1
           `space`
-            Hang.toFormatDoc (anchor (formatToken conf kw2) `hang` formatHangingExpr conf expr)
-      ThenNewLine ->
-        formatToken conf kw1
-          `flexSpaceBreak`
-            indent (anchor (flexGroup (formatExpr conf cond)))
-          `break`
-            Hang.toFormatDoc (anchor (formatToken conf kw2) `hang` formatHangingExpr conf expr)
+            alignCurrentColumn (anchor (flexGroup (formatExpr conf cond)))
+      thenDoc =
+        Hang.toFormatDoc (anchor (formatToken conf kw2) `hang` formatHangingExpr conf expr)
+    in
+      case conf.thenPlacement of
+        ThenSameLine ->
+          condDocDefault `space` thenDoc
+        ThenNewLineAlways ->
+          condDocDefault `break` thenDoc
+        ThenNewLineForLongLine ->
+          condDocLong `flexSpaceOrBreak` thenDoc
   ElseIfThen kw1 kw2 cond kw3 expr ->
-    case conf.thenPlacement of
-      ThenSameLine ->
+    let
+      condDocDefault =
         formatToken conf kw1
           `space`
             indent (anchor (formatToken conf kw2))
           `flexSpaceBreak`
             indent (anchor (flexGroup (formatExpr conf cond)))
-          `space`
-            Hang.toFormatDoc (anchor (formatToken conf kw3) `hang` formatHangingExpr conf expr)
-      ThenNewLine ->
+      condDocLong =
         formatToken conf kw1
           `space`
-            indent (anchor (formatToken conf kw2))
-          `flexSpaceBreak`
-            indent (anchor (flexGroup (formatExpr conf cond)))
-          `break`
-            Hang.toFormatDoc (anchor (formatToken conf kw3) `hang` formatHangingExpr conf expr)
+            alignCurrentColumn
+              ( anchor (formatToken conf kw2)
+                  `space`
+                    alignCurrentColumn (anchor (flexGroup (formatExpr conf cond)))
+              )
+      thenDoc =
+        Hang.toFormatDoc (anchor (formatToken conf kw3) `hang` formatHangingExpr conf expr)
+    in
+      case conf.thenPlacement of
+        ThenSameLine ->
+          condDocDefault `space` thenDoc
+        ThenNewLineAlways ->
+          condDocDefault `break` thenDoc
+        ThenNewLineForLongLine ->
+          condDocLong `flexSpaceOrBreak` thenDoc
   Else kw1 expr ->
     Hang.toFormatDoc (formatToken conf kw1 `hang` formatHangingExpr conf expr)
 

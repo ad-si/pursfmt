@@ -96,9 +96,12 @@ formatOptions =
           [ Arg.flag [ "--then-same-line", "-tsl" ]
               "Then keyword is placed on the same line as the if condition.\nDefault."
               $> ThenSameLine
-          , Arg.flag [ "--then-new-line", "-tnl" ]
-              "Then keyword is placed on a new line."
-              $> ThenNewLine
+          , Arg.flag [ "--then-new-line-always", "-tnl" ]
+              "Then keyword is placed on a new line, regardless of width."
+              $> ThenNewLineAlways
+          , Arg.flag [ "--then-new-line-for-long-line", "-tnlfl" ]
+              "Then keyword is placed on a new line only when the line would exceed the available width."
+              $> ThenNewLineForLongLine
           ]
           # Arg.default defaults.thenPlacement
     , typeArrowPlacement:
@@ -195,13 +198,16 @@ toJson options =
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of
   "same-line" -> pure ThenSameLine
-  "new-line" -> pure ThenNewLine
+  "new-line" -> pure ThenNewLineAlways
+  "new-line-always" -> pure ThenNewLineAlways
+  "new-line-for-long-line" -> pure ThenNewLineForLongLine
   other -> throwError $ UnexpectedValue (Json.fromString other)
 
 thenPlacementToString :: ThenPlacementOption -> String
 thenPlacementToString = case _ of
   ThenSameLine -> "same-line"
-  ThenNewLine -> "new-line"
+  ThenNewLineAlways -> "new-line-always"
+  ThenNewLineForLongLine -> "new-line-for-long-line"
 
 typeArrowPlacementFromString :: String -> Either JsonDecodeError TypeArrowOption
 typeArrowPlacementFromString = case _ of

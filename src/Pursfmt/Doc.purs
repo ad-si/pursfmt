@@ -23,6 +23,7 @@ module Pursfmt.Doc
   , space
   , softSpace
   , flexSpaceBreak
+  , flexSpaceOrBreak
   , flexSoftSpace
   , flexSoftBreak
   , flexDoubleBreak
@@ -346,6 +347,21 @@ flexSpaceBreak = joinDoc \f m doc -> case f of
     else
       Tuple false (Dodo.flexGroup (Dodo.spaceBreak <> doc))
 
+flexSpaceOrBreak :: forall a. FormatDocOperator a
+flexSpaceOrBreak = joinDoc \f m doc -> case f of
+  ForceBreak ->
+    Tuple true (Dodo.break <> doc)
+  ForceSpace ->
+    if m then
+      Tuple true (Dodo.space <> doc)
+    else
+      Tuple false (Dodo.flexGroup (Dodo.space <> doc))
+  ForceNone ->
+    if m then
+      Tuple true (spaceOrBreakDoc <> doc)
+    else
+      Tuple false (Dodo.flexGroup (spaceOrBreakDoc <> doc))
+
 flexSoftSpace :: forall a. FormatDocOperator a
 flexSoftSpace = joinDoc \f m doc -> case f of
   ForceBreak ->
@@ -519,3 +535,6 @@ joinWith = flip joinWithMap identity
 
 softSpaceDoc :: forall a. Doc a
 softSpaceDoc = Dodo.flexAlt mempty Dodo.space
+
+spaceOrBreakDoc :: forall a. Doc a
+spaceOrBreakDoc = Dodo.flexAlt Dodo.space Dodo.break
