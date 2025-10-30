@@ -179,7 +179,7 @@ formatWithComments leading trailing doc =
     (doc <> foldr (formatComment trailingLineComment trailingBlockComment) mempty trailing)
     leading
 
-formatToken :: forall a r. { unicode :: UnicodeOption| r } -> SourceToken -> FormatDoc a
+formatToken :: forall a r. { unicode :: UnicodeOption | r } -> SourceToken -> FormatDoc a
 formatToken conf tok = formatWithComments tok.leadingComments tok.trailingComments tokDoc
   where
   tokStr = printToken conf.unicode tok.value
