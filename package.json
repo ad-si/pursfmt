@@ -23,7 +23,7 @@
     "test": "spago test",
     "generate-default-operators": "spago run -p pursfmt-script -m GenerateDefaultOperatorsModule",
     "format-self": "npm run build && node ./bin/index.js format-in-place --then-new-line-for-long-line src bin script test-snapshots",
-    "check-self": "node ./bin/index.js check src 'test/*.purs' src bin script test-snapshots",
+    "check-self": "node ./bin/index.js check --then-new-line-for-long-line src 'test/*.purs' src bin script test-snapshots",
     "prepublishOnly": "rm -rf output bundle && npm run bundle"
   },
   "repository": {
