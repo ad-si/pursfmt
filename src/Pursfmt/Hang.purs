@@ -302,10 +302,11 @@ toFormatDoc = fst <<< goInit
     | doc.isEmpty = fdoc
     | otherwise = do
         let LeadingComment comm = doc.leading
-        if comm.left == ForceBreak || comm.lines > 0 then
-          fdoc
-        else if comm.multiline || doc.multiline then
-          forceMinSourceBreaks 1 fdoc
+
+        if comm.left == ForceBreak || comm.lines > 0
+        then fdoc
+        else if comm.multiline || doc.multiline
+        then forceMinSourceBreaks 1 fdoc
         else
           FormatDoc doc
             { doc = Dodo.spaceBreak <> comm.doc <> breakDoc comm.right doc.doc

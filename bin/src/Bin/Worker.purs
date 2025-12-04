@@ -146,7 +146,8 @@ formatInPlaceCommand shouldCheck operators { filePath, config } = do
   case formatCommand formatOptions operators contents of
     Right formatted -> do
       timing <- map (unwrap <<< toMilliseconds) $ liftEffect $ hrtimeDiff start
-      if shouldCheck then do
+      if shouldCheck
+      then do
         let alreadyFormatted = formatted == contents
         pure { filePath, error: "", alreadyFormatted, timing }
       else do

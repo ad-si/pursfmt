@@ -190,7 +190,8 @@ formatToken conf tok = formatWithComments tok.leadingComments tok.trailingCommen
 
 formatRawString :: forall a. String -> FormatDoc a
 formatRawString = splitLines >>> Array.uncons >>> foldMap \{ head, tail } ->
-  if Array.null tail then
+  if Array.null tail
+  then
     text head
   else
     fromDoc $ Dodo.lines
@@ -394,7 +395,8 @@ formatImport conf = case _ of
 formatDecl :: forall e a. Format (Declaration e) e a
 formatDecl conf = case _ of
   DeclData head (Just (Tuple equals (Separated ctors))) ->
-    if Array.null ctors.tail then
+    if Array.null ctors.tail
+    then
       declareHanging
         (formatDataHead conf head)
         space
@@ -670,7 +672,8 @@ formatSignature :: forall e a. Format (Labeled (FormatDoc a) (Type e)) e a
 formatSignature conf (Labeled { label, separator, value }) =
   case conf.typeArrowPlacement of
     TypeArrowFirst ->
-      if Array.null polytype.init then
+      if Array.null polytype.init
+      then
         label `flexSpaceBreak` indent do
           anchor (formatToken conf separator)
             `space` anchor (align width (Hang.toFormatDoc formattedPolytype))
@@ -1084,7 +1087,8 @@ formatCaseBranch conf (Tuple (Separated { head, tail }) guarded) =
           indent (foldMap (formatWhere conf) bindings)
 
     Guarded guards ->
-      if NonEmptyArray.length guards == 1 then
+      if NonEmptyArray.length guards == 1
+      then
         Hang.toFormatDoc $ caseBinders `hang` formatGuardedExpr conf (NonEmptyArray.head guards)
       else
         caseBinders `flexSpaceBreak` indent do
@@ -1131,14 +1135,16 @@ formatPatternGuard conf (PatternGuard { binder, expr }) = case binder of
 
 formatWhere :: forall e a. Format (Tuple SourceToken (NonEmptyArray (LetBinding e))) e a
 formatWhere conf (Tuple kw bindings) =
-  if conf.whereClauseSameLine then
-    formatToken conf kw `space` (alignCurrentColumn $ formatLetGroups conf (NonEmptyArray.toArray bindings))
-  else
-    formatToken conf kw `break` (formatLetGroups conf (NonEmptyArray.toArray bindings))
+  if conf.whereClauseSameLine
+  then formatToken conf kw `space`
+    (alignCurrentColumn $ formatLetGroups conf (NonEmptyArray.toArray bindings))
+  else formatToken conf kw `break`
+    (formatLetGroups conf (NonEmptyArray.toArray bindings))
 
 formatExprLet :: forall e a. FormatOptions e a -> LetIn e -> FormatDoc a -- Return FormatDoc
 formatExprLet conf letIn =
-  if conf.letClauseSameLine then
+  if conf.letClauseSameLine
+  then
     let
       letKeywordString = printToken conf.unicode letIn.keyword.value
       inKeywordString = printToken conf.unicode letIn.in.value
@@ -1196,7 +1202,8 @@ formatValueBinding conf { name, binders, guarded } =
           indent (foldMap (formatWhere conf) bindings)
 
     Guarded guards ->
-      if NonEmptyArray.length guards == 1 then
+      if NonEmptyArray.length guards == 1
+      then
         Hang.toFormatDoc $ valBinders `hang` formatGuardedExpr conf (NonEmptyArray.head guards)
       else
         valBinders `flexSpaceBreak` indent do
@@ -1353,7 +1360,8 @@ formatListWithDelimiters origOpenSpace origCloseSpace origAlignment grouped form
     fmtOpen = foldMap (formatToken conf) open
     fmtClose = foldMap (formatToken conf) close
   in
-    if conf.compactRecords then
+    if conf.compactRecords
+    then
       -- Compact Mode is ON: Differentiate based on 'grouped'
       let
         formatOneCompactElement :: b -> Doc.FormatDoc a

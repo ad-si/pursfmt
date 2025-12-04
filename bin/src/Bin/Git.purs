@@ -21,10 +21,9 @@ execSync :: String -> Effect (Either String String)
 execSync cmd = do
   result <- execSyncImpl cmd
   pure
-    if result.success then
-      Right result.value
-    else
-      Left result.value
+    if result.success
+    then Right result.value
+    else Left result.value
 
 -- | Get a list of modified files (working tree changes)
 getModifiedFiles :: Effect (Either String (Array String))

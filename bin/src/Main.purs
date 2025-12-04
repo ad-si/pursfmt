@@ -202,7 +202,8 @@ main = launchAff_ do
 
         GenerateRc cliOptions -> do
           rcStats <- Aff.try $ FS.stat rcFileName
-          if isLeft rcStats then do
+          if isLeft rcStats
+          then do
             let yamlContents = printYAML (FormatOptionsYAML cliOptions)
             FS.writeTextFile UTF8 rcFileName $ yamlContents <> "\n"
           else do
@@ -243,7 +244,8 @@ main = launchAff_ do
               }
 
           results <-
-            if Array.length filesWithOptions > numThreads * 2 then do
+            if Array.length filesWithOptions > numThreads * 2
+            then do
               -- Worker location for production bin
               let bundleLocation = Path.concat [ srcLocation, "bundle", "Bin.Worker", "index.js" ]
               -- Worker location for local dev
@@ -281,7 +283,8 @@ main = launchAff_ do
                 Console.error $ filePath <> ":\n  " <> error <> "\n"
 
             Check -> liftEffect do
-              if Array.null errors && Array.null notFormatted then do
+              if Array.null errors && Array.null notFormatted
+              then do
                 Console.log "All files are formatted."
                 Process.setExitCode 0
               else do
@@ -312,11 +315,11 @@ expandGlobs :: Array String -> Aff (Array String)
 expandGlobs = map dirToGlob >>> expandGlobsWithStatsCwd >>> map onlyFiles
   where
   dirToGlob path =
-    if Path.extname path == "" then
-      if isJust (String.stripSuffix (Pattern "**") path) then
-        Path.concat [ path, "*.purs" ]
-      else
-        Path.concat [ path, "**", "*.purs" ]
+    if Path.extname path == ""
+    then
+      if isJust (String.stripSuffix (Pattern "**") path)
+      then Path.concat [ path, "*.purs" ]
+      else Path.concat [ path, "**", "*.purs" ]
     else
       path
 

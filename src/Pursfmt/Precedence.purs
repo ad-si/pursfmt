@@ -126,10 +126,9 @@ remapOperators = goModule
           impOps =
             goImport modName head
               <> foldMap (goImport modName <<< snd) tail
-        if isJust hiding then
-          remapModuleToHiding impOps newModName modName precMap
-        else
-          foldl (flip (remapOperatorTo newModName)) precMap impOps
+        if isJust hiding
+        then remapModuleToHiding impOps newModName modName precMap
+        else foldl (flip (remapOperatorTo newModName)) precMap impOps
 
   goImport modName = case _ of
     ImportOp (Name { name: op }) ->

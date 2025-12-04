@@ -54,10 +54,9 @@ main = do
       ]
 
     lines = output # String.trim # String.split (Pattern "\n") # mapWithIndex \ix line ->
-      if ix == 0 then
-        "  [ \"\"\"" <> line <> "\"\"\""
-      else
-        "  , \"\"\"" <> line <> "\"\"\""
+      if ix == 0
+      then "  [ \"\"\"" <> line <> "\"\"\""
+      else "  , \"\"\"" <> line <> "\"\"\""
 
     footer =
       [ "  ]"

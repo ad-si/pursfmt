@@ -91,14 +91,14 @@ instance Semigroup (LeadingComment a) where
           { doc = c1.doc <> breaks ForceNone c2.lines
           , multiline = c1.multiline || c2.lines > 0
           , right =
-              if c2.lines > 0 then
-                ForceNone
-              else
-                max c1.right c2.right
+              if c2.lines > 0
+              then ForceNone
+              else max c1.right c2.right
           }
     | otherwise = do
         let br = max c1.right c2.left
-        if c2.lines > 0 || br == ForceBreak then
+        if c2.lines > 0 || br == ForceBreak
+        then
           LeadingComment c1
             { doc = c1.doc <> breaks ForceBreak c2.lines <> c2.doc
             , multiline = true
@@ -221,7 +221,8 @@ formatBlockComment = splitLines >>> Array.uncons >>> case _ of
             [ Dodo.text head
             , Dodo.locally
                 ( \prev ->
-                    if newIndent < prev.indent then
+                    if newIndent < prev.indent
+                    then
                       prev
                         { indentSpaces = spaces
                         , indent = newIndent
@@ -342,55 +343,48 @@ flexSpaceBreak = joinDoc \f m doc -> case f of
   ForceBreak ->
     Tuple true (Dodo.break <> doc)
   _ ->
-    if m then
-      Tuple true (Dodo.spaceBreak <> doc)
-    else
-      Tuple false (Dodo.flexGroup (Dodo.spaceBreak <> doc))
+    if m
+    then Tuple true (Dodo.spaceBreak <> doc)
+    else Tuple false (Dodo.flexGroup (Dodo.spaceBreak <> doc))
 
 flexSpaceOrBreak :: forall a. FormatDocOperator a
 flexSpaceOrBreak = joinDoc \f m doc -> case f of
   ForceBreak ->
     Tuple true (Dodo.break <> doc)
   ForceSpace ->
-    if m then
-      Tuple true (Dodo.space <> doc)
-    else
-      Tuple false (Dodo.flexGroup (Dodo.space <> doc))
+    if m
+    then Tuple true (Dodo.space <> doc)
+    else Tuple false (Dodo.flexGroup (Dodo.space <> doc))
   ForceNone ->
-    if m then
-      Tuple true (spaceOrBreakDoc <> doc)
-    else
-      Tuple false (Dodo.flexGroup (spaceOrBreakDoc <> doc))
+    if m
+    then Tuple true (spaceOrBreakDoc <> doc)
+    else Tuple false (Dodo.flexGroup (spaceOrBreakDoc <> doc))
 
 flexSoftSpace :: forall a. FormatDocOperator a
 flexSoftSpace = joinDoc \f m doc -> case f of
   ForceBreak ->
     Tuple true (Dodo.break <> doc)
   ForceSpace ->
-    if m then
-      Tuple true (Dodo.space <> doc)
-    else
-      Tuple false (Dodo.flexGroup (Dodo.space <> doc))
+    if m
+    then Tuple true (Dodo.space <> doc)
+    else Tuple false (Dodo.flexGroup (Dodo.space <> doc))
   ForceNone ->
-    if m then
-      Tuple true (softSpaceDoc <> doc)
-    else
-      Tuple false (Dodo.flexGroup (softSpaceDoc <> doc))
+    if m
+    then Tuple true (softSpaceDoc <> doc)
+    else Tuple false (Dodo.flexGroup (softSpaceDoc <> doc))
 
 flexSoftBreak :: forall a. FormatDocOperator a
 flexSoftBreak = joinDoc \f m doc -> case f of
   ForceBreak ->
     Tuple true (Dodo.break <> doc)
   ForceSpace ->
-    if m then
-      Tuple true (Dodo.space <> doc)
-    else
-      Tuple false (Dodo.flexGroup (Dodo.spaceBreak <> doc))
+    if m
+    then Tuple true (Dodo.space <> doc)
+    else Tuple false (Dodo.flexGroup (Dodo.spaceBreak <> doc))
   ForceNone ->
-    if m then
-      Tuple true (Dodo.break <> doc)
-    else
-      Tuple false (Dodo.flexGroup (Dodo.softBreak <> doc))
+    if m
+    then Tuple true (Dodo.break <> doc)
+    else Tuple false (Dodo.flexGroup (Dodo.softBreak <> doc))
 
 softBreak :: forall a. FormatDocOperator a
 softBreak = joinDoc \f m doc -> case f of
@@ -422,7 +416,8 @@ flexDoubleBreak (FormatDoc doc1) (FormatDoc doc2)
       let LeadingComment comm2 = doc2.leading
       let docLeft = doc1.doc <> breakDoc comm1.left comm1.doc
       let docRight = comm2.doc <> breakDoc comm2.right doc2.doc
-      if comm2.lines >= 2 || doc1.multiline then
+      if comm2.lines >= 2 || doc1.multiline
+      then
         FormatDoc doc1
           { doc = docLeft <> Dodo.break <> Dodo.break <> docRight
           , multiline = true
@@ -464,7 +459,8 @@ joinDoc spaceFn (FormatDoc doc1) (FormatDoc doc2)
       let LeadingComment comm2 = doc2.leading
       let docLeft = doc1.doc <> breakDoc comm1.left comm1.doc
       let docRight = comm2.doc <> breakDoc comm2.right doc2.doc
-      if comm2.lines > 0 then
+      if comm2.lines > 0
+      then
         FormatDoc doc1
           { doc = docLeft <> breaks ForceBreak comm2.lines <> docRight
           , multiline = true
