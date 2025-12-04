@@ -6,6 +6,7 @@ import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as Arg
 import Bin.FormatOptions (FormatOptions, FormatOptionsYAML(..), formatOptions)
 import Bin.FormatOptions as FormatOptions
+import Bin.Git as Git
 import Bin.Version (version)
 import Bin.Worker (WorkerData, WorkerInput, WorkerOutput, formatCommand, formatInPlaceCommand, toWorkerConfig)
 import Control.Monad.Except (runExcept)
@@ -72,10 +73,16 @@ data ConfigOption
   | Ignore
   | Prefer
 
+data GitFilter
+  = NoGitFilter
+  | GitModified
+  | GitStaged
+  | GitDirty
+
 data Command
   = GenerateOperators (Array String)
   | GenerateRc FormatOptions
-  | FormatInPlace FormatMode FormatOptions ConfigOption Int Boolean (Array String)
+  | FormatInPlace FormatMode FormatOptions ConfigOption Int Boolean GitFilter (Array String)
   | Format FormatOptions ConfigOption
 
 rcFileName :: String
@@ -102,6 +109,7 @@ parser =
             <*> configOption
             <*> workerOptions
             <*> timingOption
+            <*> gitFilterOption
             <*> pursGlobs
             <* Arg.flagHelp
     , Arg.command [ "format" ]
@@ -119,6 +127,7 @@ parser =
             <*> configOption
             <*> workerOptions
             <*> timingOption
+            <*> gitFilterOption
             <*> pursGlobs
             <* Arg.flagHelp
     ]
@@ -134,6 +143,20 @@ parser =
       "Number of worker threads to use.\nDefaults to 4."
       # Arg.int
       # Arg.default 4
+
+  gitFilterOption =
+    Arg.choose "git filter"
+      [ Arg.flag [ "--git-modified", "-gm" ]
+          "Only format files that have been modified in the working tree (git diff)."
+          $> GitModified
+      , Arg.flag [ "--git-staged", "-gs" ]
+          "Only format files that have been staged (git diff --cached)."
+          $> GitStaged
+      , Arg.flag [ "--git-dirty", "-gd" ]
+          "Only format files with uncommitted changes (modified, staged, or untracked)."
+          $> GitDirty
+      ]
+      # Arg.default NoGitFilter
 
   configOption =
     Arg.choose "config behavior"
@@ -186,11 +209,16 @@ main = launchAff_ do
             Console.error $ rcFileName <> " already exists."
             liftEffect $ Process.setExitCode 1
 
-        FormatInPlace mode cliOptions configOption numThreads printTiming globs -> do
+        FormatInPlace mode cliOptions configOption numThreads printTiming gitFilter globs -> do
           currentDir <- liftEffect Process.cwd
           let root = (Path.parse currentDir).root
           srcLocation <- fold <$> liftEffect (Process.lookupEnv "PURSFMT_INSTALL_LOC")
-          files <- expandGlobs globs
+          allFiles <- expandGlobs globs
+          files <- case gitFilter of
+            NoGitFilter -> pure allFiles
+            GitModified -> filterGitFiles allFiles Git.getModifiedFiles
+            GitStaged -> filterGitFiles allFiles Git.getStagedFiles
+            GitDirty -> filterGitFiles allFiles Git.getDirtyFiles
           filesWithOptions <- flip evalStateT Map.empty do
             for files \filePath -> do
               rcMap <- State.get
@@ -296,6 +324,22 @@ expandGlobs = map dirToGlob >>> expandGlobsWithStatsCwd >>> map onlyFiles
     Map.filter Stats.isFile
       >>> Map.keys
       >>> Set.toUnfoldable
+
+filterGitFiles :: Array String -> Effect (Either String (Array String)) -> Aff (Array String)
+filterGitFiles allFiles getGitFiles = do
+  gitFilesResult <- liftEffect getGitFiles
+  case gitFilesResult of
+    Left err -> do
+      Console.error $ "Error getting git files: " <> err
+      liftEffect $ Process.setExitCode 1
+      pure []
+    Right gitFiles -> do
+      currentDir <- liftEffect Process.cwd
+      -- Convert git files to absolute paths for comparison
+      absoluteGitFiles <- liftEffect $ traverse (\path -> Path.resolve [ currentDir ] path) gitFiles
+      let gitFilesSet = Set.fromFoldable absoluteGitFiles
+      -- Filter allFiles to only include those in gitFiles
+      pure $ Array.filter (\file -> Set.member file gitFilesSet) allFiles
 
 getOptions :: FormatOptions -> Maybe FormatOptions -> FilePath -> ConfigOption -> Aff FormatOptions
 getOptions cliOptions rcOptions filePath = case _ of
