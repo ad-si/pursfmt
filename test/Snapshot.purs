@@ -205,7 +205,12 @@ snapshotFormat accept mbPattern = do
               # Regex.match directiveRegex
               # foldMap (NEA.toUnfoldable >>> Array.catMaybes)
               # map String.trim
-              # Array.mapMaybe (\input -> if String.contains (String.Pattern "@format") input then Just input else Nothing)
+              # Array.mapMaybe
+                  ( \input ->
+                      if String.contains (String.Pattern "@format") input
+                      then Just input
+                      else Nothing
+                  )
 
           matchedOutputs =
             storedOutput
@@ -214,9 +219,10 @@ snapshotFormat accept mbPattern = do
 
           checkOutput :: Tuple (Tuple String String) String -> Aff { output :: String, result :: SnapshotResult, directive :: String }
           checkOutput (Tuple (Tuple directive output) saved) =
-            if output == saved then
-              pure { output, result: Passed, directive }
-            else if accept then do
+            if output == saved
+            then pure { output, result: Passed, directive }
+            else if accept
+            then do
               acceptOutput
               pure { output, result: Accepted, directive }
             else do
@@ -230,10 +236,12 @@ snapshotFormat accept mbPattern = do
           acceptedOutput (Tuple directive output) =
             pure { output, result: Accepted, directive }
 
-        if storedOutputDirectives == Set.toUnfoldable (Map.keys inputModule.directives) then do
+        if storedOutputDirectives == Set.toUnfoldable (Map.keys inputModule.directives)
+        then do
           results <- for matchedOutputs checkOutput
           pure { name, results }
-        else if accept then do
+        else if accept
+        then do
           acceptOutput
           results <- for snapshotOutputs acceptedOutput
           pure { name, results }
