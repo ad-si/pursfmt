@@ -196,7 +196,13 @@ npm run generate-default-operators
 
 To release a new version of `pursfmt`, run the following commands
 
-1. `npm version minor`
+1. `npm version --no-git-tag-version minor`
+1. Update `spago.yaml` with the new version
+1. ```bash
+    VERSION=$(node -p "require('./package.json').version") \
+    && git commit -m "$VERSION" \
+    && git tag "v$VERSION"
+    ```
 1. `npm publish`
 1. `npx spago publish --package pursfmt`
 1. `git push --tags`
