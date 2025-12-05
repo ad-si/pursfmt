@@ -192,6 +192,16 @@ npm run generate-default-operators
 ```
 
 
+### Release
+
+To release a new version of `pursfmt`, run the following commands
+
+1. `npm version minor`
+1. `npm publish`
+1. `npx spago publish --package pursfmt`
+1. `git push --tags`
+
+
 ## History
 
 This project was originally forked from
