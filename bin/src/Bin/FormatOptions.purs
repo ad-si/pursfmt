@@ -30,6 +30,7 @@ type FormatOptions =
   , whereClauseSameLine :: Boolean
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
+  , singleLineLetIn :: Boolean
   }
 
 -- Newtype wrapper for ToYAML instance
@@ -51,6 +52,7 @@ defaults =
   , whereClauseSameLine: false
   , compactRecords: false
   , letClauseSameLine: false
+  , singleLineLetIn: false
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -132,6 +134,10 @@ formatOptions =
         Arg.flag [ "--let-clause-same-line", "-lcsl" ]
           "Put source code directly after \"let\" and \"in\" instead of the next line."
           # Arg.boolean
+    , singleLineLetIn:
+        Arg.flag [ "--single-line-let-in", "-slli" ]
+          "Keep single-binding let expressions on one line when they fit."
+          # Arg.boolean
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -164,6 +170,7 @@ fromJson json = do
   whereClauseSameLine <- obj .:? "whereClauseSameLine"
   compactRecords <- obj .:? "compactRecords"
   letClauseSameLine <- obj .:? "letClauseSameLine"
+  singleLineLetIn <- obj .:? "singleLineLetIn"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -177,6 +184,7 @@ fromJson json = do
     , whereClauseSameLine: fromMaybe defaults.whereClauseSameLine whereClauseSameLine
     , compactRecords: fromMaybe defaults.compactRecords compactRecords
     , letClauseSameLine: fromMaybe defaults.letClauseSameLine letClauseSameLine
+    , singleLineLetIn: fromMaybe defaults.singleLineLetIn singleLineLetIn
     }
 
 toJson :: FormatOptions -> Json
@@ -194,6 +202,7 @@ toJson options =
     # extend (assoc "whereClauseSameLine" (encodeJson options.whereClauseSameLine))
     # extend (assoc "compactRecords" options.compactRecords)
     # extend (assoc "letClauseSameLine" options.letClauseSameLine)
+    # extend (assoc "singleLineLetIn" options.singleLineLetIn)
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of
