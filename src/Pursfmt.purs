@@ -81,6 +81,7 @@ type FormatOptions e a =
   , whereClauseSameLine :: Boolean
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
+  , singleLineLetIn :: Boolean
   }
 
 defaultFormatOptions :: forall e a. FormatError e => FormatOptions e a
@@ -95,6 +96,7 @@ defaultFormatOptions =
   , whereClauseSameLine: false
   , compactRecords: false
   , letClauseSameLine: false
+  , singleLineLetIn: false
   }
 
 class FormatError e where
@@ -1142,35 +1144,44 @@ formatWhere conf (Tuple kw bindings) =
     (formatLetGroups conf (NonEmptyArray.toArray bindings))
 
 formatExprLet :: forall e a. FormatOptions e a -> LetIn e -> FormatDoc a -- Return FormatDoc
-formatExprLet conf letIn =
-  if conf.letClauseSameLine
-  then
-    let
-      letKeywordString = printToken conf.unicode letIn.keyword.value
-      inKeywordString = printToken conf.unicode letIn.in.value
-    in
-      Doc.fromDoc
-        ( ( Dodo.text letKeywordString <> Dodo.space <>
-              (Doc.toDoc (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))) -- Inlined bindingsDoc -> dodoBindingsDoc
-          )
-            `Dodo.appendBreak`
-              ( Dodo.text inKeywordString <> Dodo.space <> Dodo.space <>
-                  (Doc.toDoc (formatExpr conf letIn.body))
-              )
-        )
-  else
-    Hang.toFormatDoc
-      ( hangBreak
-          ( formatToken conf letIn.keyword
-              `spaceBreak`
-                indent (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))
-              `spaceBreak`
-                ( formatToken conf letIn.in
-                    `spaceBreak`
-                      indent (flexGroup (formatExpr conf letIn.body))
+formatExprLet conf letIn
+  | conf.singleLineLetIn, NonEmptyArray.length letIn.bindings == 1 =
+      let
+        letKw = printToken conf.unicode letIn.keyword.value
+        inKw = printToken conf.unicode letIn.in.value
+        binding = Doc.toDoc (formatLetBinding conf (NonEmptyArray.head letIn.bindings))
+        body = Doc.toDoc (formatExpr conf letIn.body)
+        singleLine = Dodo.text letKw <> Dodo.space <> binding <> Dodo.space <> Dodo.text inKw <> Dodo.space <> body
+        multiLine = Doc.toDoc (formatExprLet (conf { singleLineLetIn = false }) letIn)
+      in
+        Doc.fromDoc $ Dodo.flexGroup (Dodo.flexAlt singleLine multiLine)
+  | conf.letClauseSameLine =
+      let
+        letKeywordString = printToken conf.unicode letIn.keyword.value
+        inKeywordString = printToken conf.unicode letIn.in.value
+      in
+        Doc.fromDoc
+          ( ( Dodo.text letKeywordString <> Dodo.space <>
+                (Doc.toDoc (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))) -- Inlined bindingsDoc -> dodoBindingsDoc
+            )
+              `Dodo.appendBreak`
+                ( Dodo.text inKeywordString <> Dodo.space <> Dodo.space <>
+                    (Doc.toDoc (formatExpr conf letIn.body))
                 )
           )
-      )
+  | otherwise =
+      Hang.toFormatDoc
+        ( hangBreak
+            ( formatToken conf letIn.keyword
+                `spaceBreak`
+                  indent (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))
+                `spaceBreak`
+                  ( formatToken conf letIn.in
+                      `spaceBreak`
+                        indent (flexGroup (formatExpr conf letIn.body))
+                  )
+            )
+        )
 
 formatLetBinding :: forall e a. Format (LetBinding e) e a
 formatLetBinding conf = case _ of
