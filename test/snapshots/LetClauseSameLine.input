@@ -6,7 +6,7 @@ simple =
   let x = 42
   in x + 1
 
--- Multiple bindings in let (should still break)
+-- Multiple bindings in let
 multiple =
   let
     a = 1
@@ -14,7 +14,7 @@ multiple =
     c = a + b
   in c * 2
 
--- Let with type signatures (should still break)
+-- Let with type signatures
 withTypes =
   let
     helper :: Int -> Int

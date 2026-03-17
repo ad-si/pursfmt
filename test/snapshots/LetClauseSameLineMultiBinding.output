@@ -1,0 +1,94 @@
+module LetClauseSameLineMultiBinding where
+
+-- Multiple bindings should align with first binding after `let`
+multipleBindings =
+  let
+    a = 1
+    b = 2
+    c = a + b
+  in
+    c * 2
+
+-- Multiple function clauses in let
+multipleClauses f comp xs =
+  let
+    g Nothing Nothing = EQ
+    g (Just _) Nothing = GT
+    g Nothing (Just _) = LT
+    g (Just a) (Just b) = comp a b
+  in
+    sortOnBy f g xs
+
+-- Multiple bindings in case branch
+caseMultiBinding = case x of
+  Just idx ->
+    let
+      elem = unsafePartial (unsafeIndex xs idx)
+      rest = unsafePartial (unsafeDeleteAt idx xs)
+    in
+      Just { yes: elem, no: rest }
+  Nothing -> Nothing
+
+-- Multiple bindings with type signatures
+withTypeSignatures =
+  let
+    helper :: Int -> Int
+    helper x = x + 1
+
+    value :: Int
+    value = 42
+  in
+    helper value
+
+-- Two bindings, one complex
+twoBindingsComplex =
+  let
+    result = case x of
+      Just a -> a
+      Nothing -> 0
+    doubled = result * 2
+  in
+    doubled + 1
+
+-- @format --let-clause-same-line
+module LetClauseSameLineMultiBinding where
+
+-- Multiple bindings should align with first binding after `let`
+multipleBindings =
+  let a = 1
+      b = 2
+      c = a + b
+  in  c * 2
+
+-- Multiple function clauses in let
+multipleClauses f comp xs =
+  let g Nothing Nothing = EQ
+      g (Just _) Nothing = GT
+      g Nothing (Just _) = LT
+      g (Just a) (Just b) = comp a b
+  in  sortOnBy f g xs
+
+-- Multiple bindings in case branch
+caseMultiBinding = case x of
+  Just idx ->
+    let elem = unsafePartial (unsafeIndex xs idx)
+        rest = unsafePartial (unsafeDeleteAt idx xs)
+    in  Just { yes: elem, no: rest }
+  Nothing -> Nothing
+
+-- Multiple bindings with type signatures
+withTypeSignatures =
+  let helper :: Int -> Int
+      helper x = x + 1
+
+      value :: Int
+      value = 42
+  in  helper value
+
+-- Two bindings, one complex
+twoBindingsComplex =
+  let result = case x of
+        Just a -> a
+        Nothing -> 0
+      doubled = result * 2
+  in  doubled + 1

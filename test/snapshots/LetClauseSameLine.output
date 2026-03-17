@@ -7,7 +7,7 @@ simple =
   in
     x + 1
 
--- Multiple bindings in let (should still break)
+-- Multiple bindings in let
 multiple =
   let
     a = 1
@@ -16,7 +16,7 @@ multiple =
   in
     c * 2
 
--- Let with type signatures (should still break)
+-- Let with type signatures
 withTypes =
   let
     helper :: Int -> Int
@@ -217,20 +217,20 @@ simple =
   let x = 42
   in  x + 1
 
--- Multiple bindings in let (should still break)
+-- Multiple bindings in let
 multiple =
   let a = 1
-  b = 2
-  c = a + b
+      b = 2
+      c = a + b
   in  c * 2
 
--- Let with type signatures (should still break)
+-- Let with type signatures
 withTypes =
   let helper :: Int -> Int
-  helper x = x + 1
+      helper x = x + 1
 
-  value :: Int
-  value = 42
+      value :: Int
+      value = 42
   in  helper value
 
 -- Nested let expressions
@@ -250,7 +250,7 @@ caseLetSingle = case x of
 caseLetMultiple = case x of
   Just a ->
     let helper = a + 1
-    other = a * 2
+        other = a * 2
     in  helper + other
   Nothing -> 0
 
@@ -364,7 +364,7 @@ lambdaLet = \x ->
 -- Let with do block in binding
 letWithDo =
   let action = do
-    x <- getSomething
-    y <- getSomethingElse
-    pure (x + y)
+        x <- getSomething
+        y <- getSomethingElse
+        pure (x + y)
   in  runAction action
