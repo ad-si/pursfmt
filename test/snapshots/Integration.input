@@ -1,0 +1,60 @@
+-- @format --align-equals --let-clause-same-line --single-line-let-in --where-clause-same-line --compact-records --arrow-last --import-sort-ide --unicode-always --then-new-line-for-long-line --width 80
+module Integration where
+
+import Data.Maybe (Maybe(..))
+import Prelude
+import Data.Array (length, filter)
+import Data.Tuple (Tuple(..))
+
+-- Multi-clause function with type signature, where clause, and records
+classify :: forall a. Ord a => {threshold :: a, label :: String} -> a -> {value :: a, category :: String}
+classify config x = {value: x, category: result}
+  where
+    result = if x > config.threshold then "above" else "below"
+
+-- Align equals across pattern match clauses
+eval :: String -> Int -> Int
+eval "add" x = x + 1
+eval "double" x = x * 2
+eval "negate" x = negate x
+eval _ x = x
+
+-- Let with single binding (should stay on one line) and multi-binding
+transform :: Array Int -> Array Int
+transform xs =
+  let evens = filter (\x -> mod x 2 == 0) xs
+  in  let
+    doubled = map (\x -> x * 2) evens
+    total = length doubled
+  in  Tuple doubled total
+
+-- Nested if-then-else (then placement matters with width constraint)
+describe :: Int -> String
+describe n = if n > 100 then "large" else if n > 10 then "medium" else "small"
+
+-- Where clause with multiple aligned bindings
+compute :: Int -> Int -> {sum :: Int, product :: Int}
+compute a b = {sum: s, product: p}
+  where
+    s = a + b
+    p = a * b
+
+-- Multi-clause in let binding with where
+process :: forall a. (a -> Maybe a) -> Array a -> Tuple (Array a) Int
+process f xs = Tuple result count
+  where
+    Tuple result count = go xs [] 0
+    go arr acc n = case arr of
+      [] -> Tuple acc n
+      _ -> Tuple acc n
+
+-- Unicode: forall, arrows, fat arrow
+identity :: forall a. a -> a
+identity x = x
+
+class Showable a <= Displayable a where
+  display :: a -> String
+
+-- Record update and access
+updateRecord :: {name :: String, age :: Int} -> {name :: String, age :: Int}
+updateRecord rec = rec {age = rec.age + 1}

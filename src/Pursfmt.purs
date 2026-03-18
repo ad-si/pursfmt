@@ -19,14 +19,17 @@ module Pursfmt
 import Prelude
 import Prim hiding (Row, Type)
 
+import Control.Alternative (guard)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
-import Data.Foldable (foldMap, foldl, foldr)
+import Data.Foldable (foldMap, foldl, foldr, all)
 import Data.List.NonEmpty as NonEmptyList
+import Data.Traversable (traverse)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Monoid (power)
+import Data.String.Pattern (Pattern(..)) as String
 import Data.Monoid as Monoid
 import Data.Newtype (un)
 import Data.String.CodeUnits as SCU
@@ -82,6 +85,7 @@ type FormatOptions e a =
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
+  , alignEquals :: Boolean
   }
 
 defaultFormatOptions :: forall e a. FormatError e => FormatOptions e a
@@ -97,6 +101,7 @@ defaultFormatOptions =
   , compactRecords: false
   , letClauseSameLine: false
   , singleLineLetIn: false
+  , alignEquals: false
   }
 
 class FormatError e where
@@ -1477,7 +1482,7 @@ data DeclGroupSeparator
   | DeclGroupSoft
 
 formatTopLevelGroups :: forall e a. Format (Array (Declaration e)) e a
-formatTopLevelGroups = formatDeclGroups topDeclGroupSeparator topDeclGroup formatDecl
+formatTopLevelGroups conf = formatDeclGroups topDeclGroupSeparator topDeclGroup formatDecl (alignTopLevelDecls conf) conf
   where
   topDeclGroupSeparator = case _, _ of
     DeclGroupValue a, DeclGroupValue b ->
@@ -1523,7 +1528,7 @@ formatTopLevelGroups = formatDeclGroups topDeclGroupSeparator topDeclGroup forma
     DeclError _ -> DeclGroupUnknown
 
 formatLetGroups :: forall e a. Format (Array (LetBinding e)) e a
-formatLetGroups = formatDeclGroups letDeclGroupSeparator letGroup formatLetBinding
+formatLetGroups conf = formatDeclGroups letDeclGroupSeparator letGroup formatLetBinding (alignLetBindings conf) conf
   where
   letDeclGroupSeparator = case _, _ of
     _, DeclGroupValueSignature _ -> DeclGroupHard
@@ -1535,13 +1540,93 @@ formatLetGroups = formatDeclGroups letDeclGroupSeparator letGroup formatLetBindi
     LetBindingPattern _ _ _ -> DeclGroupUnknown
     LetBindingError _ -> DeclGroupUnknown
 
+-- | Measure the single-line width of a value binding's LHS (name + binders).
+-- | Only measures the last line to exclude leading comments.
+valueLhsWidth :: forall e a. FormatOptions e a -> ValueBindingFields e -> Int
+valueLhsWidth conf { name, binders } =
+  let
+    lhsDoc = Doc.toDoc $ case Array.length binders of
+      0 -> formatName conf name
+      _ -> formatName conf name `space` joinWithMap space (flexGroup <<< formatBinder conf) binders
+    rendered = Dodo.print Dodo.plainText { pageWidth: 99999, ribbonRatio: 1.0, indentWidth: 2, indentUnit: "  " } lhsDoc
+  in
+    case SCU.lastIndexOf (String.Pattern "\n") rendered of
+      Just i -> SCU.length rendered - i - 1
+      Nothing -> SCU.length rendered
+
+-- | Format a value binding with padding before the `=` to align with other clauses.
+formatValueBindingAligned :: forall e a. Int -> Format (ValueBindingFields e) e a
+formatValueBindingAligned maxWidth conf binding@{ name, binders, guarded } =
+  case guarded of
+    Unconditional tok (Where { expr, bindings }) ->
+      let
+        currentWidth = valueLhsWidth conf binding
+        padding = max 0 (maxWidth - currentWidth)
+        lhs = formatName conf name
+          `flexSpaceBreak`
+            indent (joinWithMap spaceBreak (anchor <<< formatBinder conf) binders)
+        rhs = Hang.toFormatDoc (indent (anchor (formatToken conf tok)) `hang` formatHangingExpr conf expr)
+      in
+        Doc.fromDoc
+          ( Doc.toDoc lhs
+              <> Dodo.text (power " " (padding + 1))
+              <> Doc.toDoc rhs
+          )
+          `break`
+            indent (foldMap (formatWhere conf) bindings)
+    Guarded _ -> formatValueBinding conf binding
+
+-- | Try to align `=` across top-level declaration clauses of the same function.
+alignTopLevelDecls :: forall e a. FormatOptions e a -> NonEmptyList.NonEmptyList (Declaration e) -> Maybe (FormatDoc a)
+alignTopLevelDecls conf decls = do
+  guard conf.alignEquals
+  let declArray = Array.fromFoldable decls
+  let bindings = Array.mapMaybe extractDeclValue declArray
+  guard (Array.length bindings >= 2)
+  guard (all isUnconditional bindings)
+  let maxWidth = foldl (\acc vb -> max acc (valueLhsWidth conf vb)) 0 bindings
+  pure $ joinWithMap break
+    ( \d -> case d of
+        DeclValue vb | isUnconditional vb -> formatValueBindingAligned maxWidth conf vb
+        _ -> formatDecl conf d
+    )
+    declArray
+  where
+  extractDeclValue = case _ of
+    DeclValue vb -> Just vb
+    _ -> Nothing
+
+-- | Try to align `=` across let binding clauses of the same function.
+alignLetBindings :: forall e a. FormatOptions e a -> NonEmptyList.NonEmptyList (LetBinding e) -> Maybe (FormatDoc a)
+alignLetBindings conf decls = do
+  guard conf.alignEquals
+  let declArray = Array.fromFoldable decls
+  bindings <- traverse extractLetBinding declArray
+  guard (Array.length bindings >= 2)
+  guard (allSameName bindings)
+  guard (all isUnconditional bindings)
+  let maxWidth = foldl (\acc vb -> max acc (valueLhsWidth conf vb)) 0 bindings
+  pure $ joinWithMap break (formatValueBindingAligned maxWidth conf) bindings
+  where
+  extractLetBinding = case _ of
+    LetBindingName vb -> Just vb
+    _ -> Nothing
+  allSameName bindings = case Array.head bindings of
+    Nothing -> false
+    Just { name: Name { name: firstName } } -> all (\{ name: Name { name } } -> name == firstName) bindings
+
+isUnconditional :: forall e. ValueBindingFields e -> Boolean
+isUnconditional { guarded: Unconditional _ _ } = true
+isUnconditional _ = false
+
 formatDeclGroups
   :: forall e a b
    . (DeclGroup -> DeclGroup -> DeclGroupSeparator)
   -> (b -> DeclGroup)
   -> Format b e a
+  -> (NonEmptyList.NonEmptyList b -> Maybe (FormatDoc a))
   -> Format (Array b) e a
-formatDeclGroups declSeparator k format conf =
+formatDeclGroups declSeparator k format formatAligned conf =
   maybe mempty joinDecls <<< foldr go Nothing
   where
   go decl = Just <<< case _ of
@@ -1575,5 +1660,6 @@ formatDeclGroups declSeparator k format conf =
     DeclGroupHard ->
       newDoc `break` forceMinSourceBreaks 2 acc.doc
     where
-    newDoc =
-      joinWithMap break (format conf) acc.decls
+    newDoc = case formatAligned acc.decls of
+      Just aligned -> aligned
+      Nothing -> joinWithMap break (format conf) acc.decls
