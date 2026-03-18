@@ -1585,9 +1585,12 @@ alignTopLevelDecls conf decls = do
   guard (Array.length bindings >= 2)
   guard (all isUnconditional bindings)
   let maxWidth = foldl (\acc vb -> max acc (valueLhsWidth conf vb)) 0 bindings
-  pure $ joinWithMap break (\d -> case d of
-    DeclValue vb | isUnconditional vb -> formatValueBindingAligned maxWidth conf vb
-    _ -> formatDecl conf d) declArray
+  pure $ joinWithMap break
+    ( \d -> case d of
+        DeclValue vb | isUnconditional vb -> formatValueBindingAligned maxWidth conf vb
+        _ -> formatDecl conf d
+    )
+    declArray
   where
   extractDeclValue = case _ of
     DeclValue vb -> Just vb
