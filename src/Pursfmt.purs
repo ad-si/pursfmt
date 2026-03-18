@@ -1157,17 +1157,15 @@ formatExprLet conf letIn
         Doc.fromDoc $ Dodo.flexGroup (Dodo.flexAlt singleLine multiLine)
   | conf.letClauseSameLine =
       let
-        letKeywordString = printToken conf.unicode letIn.keyword.value
-        inKeywordString = printToken conf.unicode letIn.in.value
+        letKw = Dodo.text (printToken conf.unicode letIn.keyword.value)
+        inKw = Dodo.text (printToken conf.unicode letIn.in.value)
+        bindings = Doc.toDoc (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))
+        body = Doc.toDoc (flexGroup (formatExpr conf letIn.body))
       in
         Doc.fromDoc
-          ( ( Dodo.text letKeywordString <> Dodo.space <>
-                (Doc.toDoc (formatLetGroups conf (NonEmptyArray.toArray letIn.bindings))) -- Inlined bindingsDoc -> dodoBindingsDoc
-            )
+          ( (letKw <> Dodo.space <> Dodo.alignCurrentColumn bindings)
               `Dodo.appendBreak`
-                ( Dodo.text inKeywordString <> Dodo.space <> Dodo.space <>
-                    (Doc.toDoc (formatExpr conf letIn.body))
-                )
+                (inKw <> Dodo.space <> Dodo.space <> body)
           )
   | otherwise =
       Hang.toFormatDoc
