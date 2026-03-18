@@ -45,6 +45,7 @@ type WorkerConfig =
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
+  , alignEquals :: Boolean
   }
 
 toWorkerConfig :: FormatOptions -> WorkerConfig
@@ -62,6 +63,7 @@ toWorkerConfig options =
   , compactRecords: options.compactRecords
   , letClauseSameLine: options.letClauseSameLine
   , singleLineLetIn: options.singleLineLetIn
+  , alignEquals: options.alignEquals
   }
 
 type WorkerData =
@@ -105,6 +107,7 @@ formatCommand args operators contents = do
           , compactRecords = args.compactRecords
           , letClauseSameLine = args.letClauseSameLine
           , singleLineLetIn = args.singleLineLetIn
+          , alignEquals = args.alignEquals
           }
       Right $ print $ toDoc $ formatModule opts ok
     ParseSucceededWithErrors _ errs -> do
@@ -144,6 +147,7 @@ formatInPlaceCommand shouldCheck operators { filePath, config } = do
       , compactRecords: config.compactRecords
       , letClauseSameLine: config.letClauseSameLine
       , singleLineLetIn: config.singleLineLetIn
+      , alignEquals: config.alignEquals
       }
   contents <- FS.readTextFile UTF8 filePath
   start <- liftEffect hrtime

@@ -31,6 +31,7 @@ type FormatOptions =
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
+  , alignEquals :: Boolean
   }
 
 -- Newtype wrapper for ToYAML instance
@@ -53,6 +54,7 @@ defaults =
   , compactRecords: false
   , letClauseSameLine: false
   , singleLineLetIn: false
+  , alignEquals: false
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -138,6 +140,10 @@ formatOptions =
         Arg.flag [ "--single-line-let-in", "-slli" ]
           "Keep single-binding let expressions on one line when they fit."
           # Arg.boolean
+    , alignEquals:
+        Arg.flag [ "--align-equals", "-ae" ]
+          "Align equals signs across clauses of the same function definition."
+          # Arg.boolean
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -171,6 +177,7 @@ fromJson json = do
   compactRecords <- obj .:? "compactRecords"
   letClauseSameLine <- obj .:? "letClauseSameLine"
   singleLineLetIn <- obj .:? "singleLineLetIn"
+  alignEquals <- obj .:? "alignEquals"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -185,6 +192,7 @@ fromJson json = do
     , compactRecords: fromMaybe defaults.compactRecords compactRecords
     , letClauseSameLine: fromMaybe defaults.letClauseSameLine letClauseSameLine
     , singleLineLetIn: fromMaybe defaults.singleLineLetIn singleLineLetIn
+    , alignEquals: fromMaybe defaults.alignEquals alignEquals
     }
 
 toJson :: FormatOptions -> Json
@@ -203,6 +211,7 @@ toJson options =
     # extend (assoc "compactRecords" options.compactRecords)
     # extend (assoc "letClauseSameLine" options.letClauseSameLine)
     # extend (assoc "singleLineLetIn" options.singleLineLetIn)
+    # extend (assoc "alignEquals" options.alignEquals)
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of

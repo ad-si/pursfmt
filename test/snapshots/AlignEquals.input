@@ -1,0 +1,30 @@
+-- @format --align-equals
+-- @format --align-equals --let-clause-same-line
+module AlignEquals where
+
+-- Multiple clauses with different pattern widths
+g Nothing Nothing = EQ
+g (Just _) Nothing = GT
+g Nothing (Just _) = LT
+g (Just a) (Just b) = comp a b
+
+-- With a type signature
+foo :: Int -> Int
+foo 0 = 1
+foo n = n + 1
+
+-- Different pattern lengths
+bar true x = x * 2
+bar false x = x + 1
+
+-- Single clause (no alignment needed)
+baz x = x + 1
+
+-- Let binding with multiple clauses
+example f comp xs =
+  let
+    h Nothing Nothing = EQ
+    h (Just _) Nothing = GT
+    h Nothing (Just _) = LT
+    h (Just a) (Just b) = comp a b
+  in sortOnBy f h xs
