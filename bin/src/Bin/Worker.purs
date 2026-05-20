@@ -46,6 +46,7 @@ type WorkerConfig =
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
   , alignClauses :: String
+  , alignCaseBranches :: String
   }
 
 toWorkerConfig :: FormatOptions -> WorkerConfig
@@ -64,6 +65,7 @@ toWorkerConfig options =
   , letClauseSameLine: options.letClauseSameLine
   , singleLineLetIn: options.singleLineLetIn
   , alignClauses: FormatOptions.alignClausesToString options.alignClauses
+  , alignCaseBranches: FormatOptions.alignCaseBranchesToString options.alignCaseBranches
   }
 
 type WorkerData =
@@ -108,6 +110,7 @@ formatCommand args operators contents = do
           , letClauseSameLine = args.letClauseSameLine
           , singleLineLetIn = args.singleLineLetIn
           , alignClauses = args.alignClauses
+          , alignCaseBranches = args.alignCaseBranches
           }
       Right $ print $ toDoc $ formatModule opts ok
     ParseSucceededWithErrors _ errs -> do
@@ -150,6 +153,9 @@ formatInPlaceCommand shouldCheck operators { filePath, config } = do
       , alignClauses:
           fromRight' (\_ -> unsafeCrashWith "Unknown alignClauses value") do
             FormatOptions.alignClausesFromString config.alignClauses
+      , alignCaseBranches:
+          fromRight' (\_ -> unsafeCrashWith "Unknown alignCaseBranches value") do
+            FormatOptions.alignCaseBranchesFromString config.alignCaseBranches
       }
   contents <- FS.readTextFile UTF8 filePath
   start <- liftEffect hrtime

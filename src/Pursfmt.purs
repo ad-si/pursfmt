@@ -6,6 +6,7 @@ module Pursfmt
   , ImportSortOption(..)
   , ImportWrapOption(..)
   , AlignClausesOption(..)
+  , AlignCaseBranchesOption(..)
   , Format
   , formatModule
   , formatDecl
@@ -81,6 +82,13 @@ data AlignClausesOption
 
 derive instance eqAlignClausesOption :: Eq AlignClausesOption
 
+data AlignCaseBranchesOption
+  = AlignCaseBranchesNone
+  | AlignCaseBranchesArrows
+  | AlignCaseBranchesFull
+
+derive instance eqAlignCaseBranchesOption :: Eq AlignCaseBranchesOption
+
 type FormatOptions e a =
   { formatError :: e -> FormatDoc a
   , unicode :: UnicodeOption
@@ -94,6 +102,7 @@ type FormatOptions e a =
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
   , alignClauses :: AlignClausesOption
+  , alignCaseBranches :: AlignCaseBranchesOption
   }
 
 defaultFormatOptions :: forall e a. FormatError e => FormatOptions e a
@@ -110,6 +119,7 @@ defaultFormatOptions =
   , letClauseSameLine: false
   , singleLineLetIn: false
   , alignClauses: AlignClausesNone
+  , alignCaseBranches: AlignCaseBranchesNone
   }
 
 class FormatError e where
@@ -972,7 +982,7 @@ formatHangingExpr conf = case _ of
   ExprCase caseOf@{ head: Separated { head, tail } } ->
     hang
       (formatToken conf caseOf.keyword `flexSpaceBreak` indent caseHead)
-      (hangBreak (joinWithMap break (flexGroup <<< formatCaseBranch conf) caseOf.branches))
+      (hangBreak (formatCaseBranches conf caseOf.branches))
     where
     caseHead =
       caseHeadExprs `spaceBreak` anchor (formatToken conf caseOf.of)
@@ -1092,7 +1102,7 @@ formatRecordUpdate conf = case _ of
       formatBasicListNonEmpty Grouped formatRecordUpdate conf upd
 
 formatCaseBranch :: forall e a. Format (Tuple (Separated (Binder e)) (Guarded e)) e a
-formatCaseBranch conf (Tuple (Separated { head, tail }) guarded) =
+formatCaseBranch conf (Tuple separated guarded) =
   case guarded of
     Unconditional tok (Where { expr, bindings }) ->
       caseBinders
@@ -1109,14 +1119,126 @@ formatCaseBranch conf (Tuple (Separated { head, tail }) guarded) =
         caseBinders `flexSpaceBreak` indent do
           joinWithMap break (Hang.toFormatDoc <<< formatGuardedExpr conf) guards
   where
-  caseBinders =
+  caseBinders = formatCaseBranchLhs conf separated
+
+formatCaseBranchLhs :: forall e a. FormatOptions e a -> Separated (Binder e) -> FormatDoc a
+formatCaseBranchLhs conf (Separated { head, tail }) =
+  flexGroup $ foldl
+    ( \doc (Tuple a b) ->
+        (doc <> indent (anchor (formatToken conf a)))
+          `spaceBreak` flexGroup (formatBinder conf b)
+    )
+    (flexGroup (formatBinder conf head))
+    tail
+
+formatCaseBranches :: forall e a. FormatOptions e a -> NonEmptyArray (Tuple (Separated (Binder e)) (Guarded e)) -> FormatDoc a
+formatCaseBranches conf branches =
+  fromMaybe fallback (tryAlignCaseBranches conf branches)
+  where
+  fallback = joinWithMap break (flexGroup <<< formatCaseBranch conf) branches
+
+type UnconditionalBranch e =
+  { separated :: Separated (Binder e)
+  , tok :: SourceToken
+  , where_ :: Where e
+  }
+
+-- | Try to align the arrows of case branches. Succeeds only when there are at
+-- | least two branches and every one is unconditional (no guards).
+tryAlignCaseBranches :: forall e a. FormatOptions e a -> NonEmptyArray (Tuple (Separated (Binder e)) (Guarded e)) -> Maybe (FormatDoc a)
+tryAlignCaseBranches conf branches = do
+  guard (conf.alignCaseBranches /= AlignCaseBranchesNone)
+  let branchArray = NonEmptyArray.toArray branches
+  guard (Array.length branchArray >= 2)
+  unconditionals <- traverse extractUnconditional branchArray
+  let
+    mbColumnWidths =
+      if conf.alignCaseBranches == AlignCaseBranchesFull
+      then Just (caseBranchColumnWidths conf (map _.separated unconditionals))
+      else Nothing
+    maxWidth = foldl (\acc u -> max acc (caseBranchLhsWidth conf mbColumnWidths u.separated)) 0 unconditionals
+  pure $ joinWithMap break (formatCaseBranchAligned conf mbColumnWidths maxWidth) unconditionals
+  where
+  extractUnconditional (Tuple separated guarded) = case guarded of
+    Unconditional tok where_ -> Just { separated, tok, where_ }
+    Guarded _ -> Nothing
+
+-- | Extract all binders (head + comma-separated tail) from a case branch LHS.
+caseBranchBinders :: forall e. Separated (Binder e) -> Array (Binder e)
+caseBranchBinders (Separated { head, tail }) = Array.cons head (map snd tail)
+
+-- | Max width of each binder column across multiple case branches.
+caseBranchColumnWidths :: forall e a. FormatOptions e a -> Array (Separated (Binder e)) -> Array Int
+caseBranchColumnWidths conf separateds =
+  let
+    allWidths = map (\sep -> map (binderWidth conf) (caseBranchBinders sep)) separateds
+    maxCols = foldl (\acc ws -> max acc (Array.length ws)) 0 allWidths
+  in
+    Array.mapWithIndex (\i _ -> foldl (\acc ws -> max acc (fromMaybe 0 (Array.index ws i))) 0 allWidths) (Array.replicate maxCols 0)
+
+-- | Width of a case branch LHS, measured the same way it will be rendered:
+-- | column-aligned when column widths are supplied, otherwise as-is.
+caseBranchLhsWidth :: forall e a. FormatOptions e a -> Maybe (Array Int) -> Separated (Binder e) -> Int
+caseBranchLhsWidth conf mbColumnWidths sep = case mbColumnWidths of
+  Nothing -> measureLastLineWidth (formatCaseBranchLhs conf sep)
+  Just colWidths ->
+    let
+      binders = caseBranchBinders sep
+      numBinders = Array.length binders
+      -- Non-last binders take their column width plus ", " for the separator;
+      -- the last binder keeps its actual width (it isn't padded).
+      paddedWidths = Array.mapWithIndex
+        ( \i binder ->
+            if i == numBinders - 1 then binderWidth conf binder
+            else fromMaybe 0 (Array.index colWidths i) + 2
+        )
+        binders
+    in
+      foldl (+) 0 paddedWidths
+
+-- | Format the LHS of a case branch with each binder column padded to the column width.
+formatCaseBranchLhsColumnAligned :: forall e a. FormatOptions e a -> Array Int -> Separated (Binder e) -> FormatDoc a
+formatCaseBranchLhsColumnAligned conf colWidths (Separated { head, tail }) =
+  let
+    numBinders = 1 + Array.length tail
+    padBinder i binder =
+      let
+        formatted = flexGroup (formatBinder conf binder)
+        targetWidth = fromMaybe 0 (Array.index colWidths i)
+        currentWidth = binderWidth conf binder
+        padding = max 0 (targetWidth - currentWidth)
+      in
+        if i == numBinders - 1 then formatted
+        else Doc.fromDoc (Doc.toDoc formatted <> Dodo.text (power " " padding))
+
+    indexedTail = Array.mapWithIndex (\i x -> Tuple (i + 1) x) tail
+  in
     flexGroup $ foldl
-      ( \doc (Tuple a b) ->
-          (doc <> indent (anchor (formatToken conf a)))
-            `spaceBreak` flexGroup (formatBinder conf b)
+      ( \acc (Tuple idx (Tuple commaTok b)) ->
+          (acc <> indent (anchor (formatToken conf commaTok)))
+            `spaceBreak` padBinder idx b
       )
-      (flexGroup (formatBinder conf head))
-      tail
+      (padBinder 0 head)
+      indexedTail
+
+-- | Format a single unconditional case branch with padding before the arrow,
+-- | so the arrows line up across the branches of the case expression.
+formatCaseBranchAligned :: forall e a. FormatOptions e a -> Maybe (Array Int) -> Int -> UnconditionalBranch e -> FormatDoc a
+formatCaseBranchAligned conf mbColumnWidths maxWidth { separated, tok, where_: Where { expr, bindings } } =
+  let
+    lhsDoc = case mbColumnWidths of
+      Just colWidths -> formatCaseBranchLhsColumnAligned conf colWidths separated
+      Nothing -> formatCaseBranchLhs conf separated
+    padding = max 0 (maxWidth - caseBranchLhsWidth conf mbColumnWidths separated)
+    rhs = Hang.toFormatDoc (formatToken conf tok `hang` formatHangingExpr conf expr)
+  in
+    Doc.fromDoc
+      ( Doc.toDoc lhsDoc
+          <> Dodo.text (power " " (padding + 1))
+          <> Doc.toDoc rhs
+      )
+      `break`
+        indent (foldMap (formatWhere conf) bindings)
 
 formatGuardedExpr :: forall e a. FormatHanging (GuardedExpr e) e a
 formatGuardedExpr conf (GuardedExpr ge@{ patterns: Separated { head, tail }, where: Where { expr, bindings } }) =

@@ -1,0 +1,30 @@
+-- @format --align-case-branches-arrows
+-- @format --align-case-branches-full
+module AlignCaseBranches where
+
+-- Simple case: different binder widths
+describe x = case x of
+  Nothing -> "none"
+  Just y -> "some " <> show y
+
+-- Case branches with record patterns
+unconsDesc xs = case uncons xs of
+  Nothing -> "empty"
+  Just {head, tail} -> "cons " <> show head
+
+-- Multi-scrutinee case (exercises column alignment in full mode)
+compareMaybe a b = case a, b of
+  Nothing, Nothing -> EQ
+  Just _, Nothing -> GT
+  Nothing, Just _ -> LT
+  Just x, Just y -> compare x y
+
+-- Single branch: no alignment
+single x = case x of
+  y -> y
+
+-- Guarded branch present: alignment must not apply to any branch
+withGuard x = case x of
+  Nothing -> 0
+  Just n | n > 0 -> n
+         | otherwise -> 0

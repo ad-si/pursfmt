@@ -121,6 +121,7 @@ parseDirectivesFromModule (Module { header: ModuleHeader header, body }) =
         , letClauseSameLine: opts.letClauseSameLine
         , singleLineLetIn: opts.singleLineLetIn
         , alignClauses: opts.alignClauses
+        , alignCaseBranches: opts.alignCaseBranches
         }
     }
     where
