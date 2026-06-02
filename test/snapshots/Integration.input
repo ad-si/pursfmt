@@ -1,4 +1,4 @@
--- @format --align-clauses-full --let-clause-same-line --single-line-let-in --where-clause-same-line --compact-records --arrow-last --import-sort-ide --unicode-always --then-new-line-for-long-line --width 80
+-- @format --align-clauses-full --align-case-branches-full --let-clause-same-line --single-line-let-in --where-clause-same-line --compact-records --arrow-last --import-sort-ide --unicode-always --then-new-line-for-long-line --width 80
 module Integration where
 
 import Data.Maybe (Maybe(..))
@@ -23,6 +23,15 @@ eval _ x = x
 fromMaybe' :: forall a. a -> Maybe a -> a
 fromMaybe' default Nothing = default
 fromMaybe' _ (Just x) = x
+
+-- Multi-scrutinee case with varying binder widths (exercises case-branch
+-- column and arrow alignment)
+combine :: Maybe Int -> Maybe Int -> Int
+combine a b = case a, b of
+  Nothing, Nothing -> 0
+  Just x, Nothing -> x
+  Nothing, Just y -> y
+  Just x, Just y -> x + y
 
 -- Let with single binding (should stay on one line) and multi-binding
 transform :: Array Int -> Array Int

@@ -15,7 +15,7 @@ import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
 import Data.YAML.Foreign.Encode (class ToYAML, entry, object)
-import Pursfmt (AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
+import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
 type FormatOptions =
   { importSort :: ImportSortOption
@@ -32,6 +32,7 @@ type FormatOptions =
   , letClauseSameLine :: Boolean
   , singleLineLetIn :: Boolean
   , alignClauses :: AlignClausesOption
+  , alignCaseBranches :: AlignCaseBranchesOption
   }
 
 -- Newtype wrapper for ToYAML instance
@@ -55,6 +56,7 @@ defaults =
   , letClauseSameLine: false
   , singleLineLetIn: false
   , alignClauses: AlignClausesNone
+  , alignCaseBranches: AlignCaseBranchesNone
   }
 
 formatOptions :: ArgParser FormatOptions
@@ -153,6 +155,19 @@ formatOptions =
               $> AlignClausesFull
           ]
           # Arg.default defaults.alignClauses
+    , alignCaseBranches:
+        Arg.choose "align case branches"
+          [ Arg.flag [ "--align-case-branches-none", "-acbn" ]
+              "No alignment of case branches.\nDefault."
+              $> AlignCaseBranchesNone
+          , Arg.flag [ "--align-case-branches-arrows", "-acba" ]
+              "Align arrows across branches of the same case expression."
+              $> AlignCaseBranchesArrows
+          , Arg.flag [ "--align-case-branches-full", "-acbf" ]
+              "Align binder columns and arrows across branches of the same case expression."
+              $> AlignCaseBranchesFull
+          ]
+          # Arg.default defaults.alignCaseBranches
     }
 
 unicodeOption :: ArgParser UnicodeOption
@@ -187,6 +202,7 @@ fromJson json = do
   letClauseSameLine <- obj .:? "letClauseSameLine"
   singleLineLetIn <- obj .:? "singleLineLetIn"
   alignClauses <- traverse alignClausesFromString =<< obj .:? "alignClauses"
+  alignCaseBranches <- traverse alignCaseBranchesFromString =<< obj .:? "alignCaseBranches"
   pure
     { importSort: fromMaybe defaults.importSort importSort
     , importWrap: fromMaybe defaults.importWrap importWrap
@@ -202,6 +218,7 @@ fromJson json = do
     , letClauseSameLine: fromMaybe defaults.letClauseSameLine letClauseSameLine
     , singleLineLetIn: fromMaybe defaults.singleLineLetIn singleLineLetIn
     , alignClauses: fromMaybe defaults.alignClauses alignClauses
+    , alignCaseBranches: fromMaybe defaults.alignCaseBranches alignCaseBranches
     }
 
 toJson :: FormatOptions -> Json
@@ -221,6 +238,7 @@ toJson options =
     # extend (assoc "letClauseSameLine" options.letClauseSameLine)
     # extend (assoc "singleLineLetIn" options.singleLineLetIn)
     # extend (assoc "alignClauses" (alignClausesToString options.alignClauses))
+    # extend (assoc "alignCaseBranches" (alignCaseBranchesToString options.alignCaseBranches))
 
 thenPlacementFromString :: String -> Either JsonDecodeError ThenPlacementOption
 thenPlacementFromString = case _ of
@@ -294,6 +312,19 @@ alignClausesToString = case _ of
   AlignClausesNone -> "none"
   AlignClausesEquals -> "equals"
   AlignClausesFull -> "full"
+
+alignCaseBranchesFromString :: String -> Either JsonDecodeError AlignCaseBranchesOption
+alignCaseBranchesFromString = case _ of
+  "none" -> pure AlignCaseBranchesNone
+  "arrows" -> pure AlignCaseBranchesArrows
+  "full" -> pure AlignCaseBranchesFull
+  other -> throwError $ UnexpectedValue (Json.fromString other)
+
+alignCaseBranchesToString :: AlignCaseBranchesOption -> String
+alignCaseBranchesToString = case _ of
+  AlignCaseBranchesNone -> "none"
+  AlignCaseBranchesArrows -> "arrows"
+  AlignCaseBranchesFull -> "full"
 
 instance toYAMLFormatOptions :: ToYAML FormatOptionsYAML where
   toYAML (FormatOptionsYAML options) =
