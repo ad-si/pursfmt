@@ -1300,7 +1300,7 @@ formatExprLet conf letIn
         Doc.fromDoc
           ( (letKw <> Dodo.space <> Dodo.alignCurrentColumn bindings)
               `Dodo.appendBreak`
-                (inKw <> Dodo.space <> Dodo.space <> body)
+                (inKw <> Dodo.space <> Dodo.space <> Dodo.alignCurrentColumn body)
           )
   | otherwise =
       Hang.toFormatDoc

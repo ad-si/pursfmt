@@ -44,6 +44,18 @@ transform xs =
     in
       Tuple doubled total
 
+-- Let with if-then-else body. The then-body, else, and else-body must stay
+-- aligned with `if`, not collapse to the `let` indent column.
+pickIndex :: Int -> Array Int -> Maybe Int
+pickIndex n xs =
+  let
+    len = length xs
+  in
+    if n < 1 || n > len then
+      Nothing
+    else
+      Just (n * len)
+
 -- Multi-clause pattern match inside a let binding
 sortHelper :: forall a b. (a -> Maybe b) -> (b -> b -> Int) -> Array a -> Array a
 sortHelper f comp xs =
@@ -133,7 +145,18 @@ transform xs =
   let evens = filter (\x → mod x 2 == 0) xs
   in  let doubled = map (\x → x * 2) evens
           total = length doubled
-  in  Tuple doubled total
+      in  Tuple doubled total
+
+-- Let with if-then-else body. The then-body, else, and else-body must stay
+-- aligned with `if`, not collapse to the `let` indent column.
+pickIndex ∷ Int → Array Int → Maybe Int
+pickIndex n xs =
+  let len = length xs
+  in  if n < 1 || n > len
+      then
+        Nothing
+      else
+        Just (n * len)
 
 -- Multi-clause pattern match inside a let binding
 sortHelper ∷ ∀ a b. (a → Maybe b) → (b → b → Int) → Array a → Array a
