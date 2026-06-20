@@ -94,6 +94,23 @@ complexBody =
     1 -> "one"
     _ -> "other"
 
+-- Let with if-then-else body. The then-body, else, and else-body must stay
+-- aligned with `if`, not collapse to the `let` indent column.
+ifBody n =
+  let len = 10
+  in  if n < 1 || n > len then
+        Nothing
+      else
+        Just (n * len)
+
+-- Let with do-block body. Statements must indent relative to `do`, not
+-- collapse to the `let` indent column.
+doBody =
+  let prefix = "log:"
+  in  do
+        log prefix
+        log "done"
+
 -- Let with where clause
 letWithWhere =
   let x = helper
