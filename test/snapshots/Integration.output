@@ -44,6 +44,22 @@ transform xs =
     in
       Tuple doubled total
 
+-- Smart single-line let with destructuring should work with the combined options
+pairSum :: Tuple Int Int -> Int
+pairSum tuple =
+  let
+    Tuple left right = tuple
+  in
+    left + right
+
+-- Comments should keep single-binding lets multiline even in the combined case
+commentedLet :: Int -> Int
+commentedLet n =
+  let
+    x = n + 1 -- keep binding
+  in
+    x
+
 -- Let with if-then-else body. The then-body, else, and else-body must stay
 -- aligned with `if`, not collapse to the `let` indent column.
 pickIndex :: Int -> Array Int -> Maybe Int
@@ -98,7 +114,7 @@ class Showable a <= Displayable a where
 updateRecord :: { name :: String, age :: Int } -> { name :: String, age :: Int }
 updateRecord rec = rec { age = rec.age + 1 }
 
--- @format --align-clauses-full --align-case-branches-full --let-clause-same-line --single-line-let-in --where-clause-same-line --compact-records --arrow-last --import-sort-ide --unicode-always --then-new-line-for-long-line --width 80
+-- @format --align-clauses-full --align-case-branches-full --let-clause-same-line --single-line-let-in smart --where-clause-same-line --compact-records --arrow-last --import-sort-ide --unicode-always --then-new-line-for-long-line --width 80
 module Integration where
 
 import Prelude
@@ -146,6 +162,18 @@ transform xs =
   in  let doubled = map (\x → x * 2) evens
           total = length doubled
       in  Tuple doubled total
+
+-- Smart single-line let with destructuring should work with the combined options
+pairSum ∷ Tuple Int Int → Int
+pairSum tuple = let Tuple left right = tuple in left + right
+
+-- Comments should keep single-binding lets multiline even in the combined case
+commentedLet ∷ Int → Int
+commentedLet n =
+  let
+    x = n + 1 -- keep binding
+  in
+    x
 
 -- Let with if-then-else body. The then-body, else, and else-body must stay
 -- aligned with `if`, not collapse to the `let` indent column.

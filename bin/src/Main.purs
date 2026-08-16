@@ -4,6 +4,7 @@ import Prelude
 
 import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as Arg
+import Bin.Arguments as Arguments
 import Bin.FormatOptions (FormatOptions, FormatOptionsYAML(..), formatOptions)
 import Bin.FormatOptions as FormatOptions
 import Bin.Git as Git
@@ -178,12 +179,16 @@ parser =
       # Arg.boolean
       # Arg.default false
 
+parseCommand :: Array String -> Either Arg.ArgError Command
+parseCommand =
+  Arg.parseArgs "pursfmt" "A formatter for PureScript source code." parser
+    <<< Arguments.normalizeLegacyArgs
+
 main :: Effect Unit
 main = launchAff_ do
   args <- Array.drop 2 <$> liftEffect Process.argv
   let
-    parsedCmd =
-      Arg.parseArgs "pursfmt" "A formatter for PureScript source code." parser args
+    parsedCmd = parseCommand args
 
   case parsedCmd of
     Left err -> do
