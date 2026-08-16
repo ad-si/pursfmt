@@ -46,6 +46,8 @@ import Pursfmt.Doc as Doc
 import Pursfmt.Hang (HangingDoc, HangingOp(..), hang, hangApp, hangBreak, hangOps, hangWithIndent)
 import Pursfmt.Hang as Hang
 import Pursfmt.Precedence (OperatorNamespace(..), OperatorTree(..), PrecedenceMap, QualifiedOperator(..), toOperatorTree)
+import Pursfmt.SingleLineLetIn (SingleLineLetInOption(..)) as Exports
+import Pursfmt.SingleLineLetIn as SingleLineLetIn
 import Pursfmt.Token (UnicodeOption(..)) as Exports
 import Pursfmt.Token (UnicodeOption(..), printToken)
 import Pursfmt.Util (nameOf, overLabel, splitLines, splitStringEscapeLines)
@@ -100,7 +102,7 @@ type FormatOptions e a =
   , whereClauseSameLine :: Boolean
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
-  , singleLineLetIn :: Boolean
+  , singleLineLetIn :: SingleLineLetIn.SingleLineLetInOption
   , alignClauses :: AlignClausesOption
   , alignCaseBranches :: AlignCaseBranchesOption
   }
@@ -117,7 +119,7 @@ defaultFormatOptions =
   , whereClauseSameLine: false
   , compactRecords: false
   , letClauseSameLine: false
-  , singleLineLetIn: false
+  , singleLineLetIn: SingleLineLetIn.SingleLineLetInNever
   , alignClauses: AlignClausesNone
   , alignCaseBranches: AlignCaseBranchesNone
   }
@@ -1280,17 +1282,17 @@ formatWhere conf (Tuple kw bindings) =
 
 formatExprLet :: forall e a. FormatOptions e a -> LetIn e -> FormatDoc a -- Return FormatDoc
 formatExprLet conf letIn
-  | conf.singleLineLetIn, NonEmptyArray.length letIn.bindings == 1 =
+  | SingleLineLetIn.shouldSingleLineLetIn conf.singleLineLetIn letIn =
       let
         letKw = printToken conf.unicode letIn.keyword.value
         inKw = printToken conf.unicode letIn.in.value
         binding = Doc.toDoc (formatLetBinding conf (NonEmptyArray.head letIn.bindings))
         body = Doc.toDoc (formatExpr conf letIn.body)
         singleLine = Dodo.text letKw <> Dodo.space <> binding <> Dodo.space <> Dodo.text inKw <> Dodo.space <> body
-        multiLine = Doc.toDoc (formatExprLet (conf { singleLineLetIn = false }) letIn)
+        multiLine = Doc.toDoc (formatExprLet (conf { singleLineLetIn = SingleLineLetIn.SingleLineLetInNever }) letIn)
       in
         Doc.fromDoc $ Dodo.flexGroup (Dodo.flexAlt singleLine multiLine)
-  | conf.letClauseSameLine =
+  | conf.letClauseSameLine && SingleLineLetIn.letInHasNoComments letIn =
       let
         letKw = Dodo.text (printToken conf.unicode letIn.keyword.value)
         inKw = Dodo.text (printToken conf.unicode letIn.in.value)

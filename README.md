@@ -67,15 +67,21 @@ Some common options include:
 - `--arrow-first` or `--arrow-last` to control whether type signatures
     put arrows first on the line or last on the line (purty-style),
     which defaults to arrow-first.
+- `--single-line-let-in never|smart|always` to control when comment-free
+    single-binding `let ... in` expressions may be kept on one line.
+    `never` disables this formatting, `smart` keeps only simple lets on one
+    line, and `always` allows any single-binding let when it fits.
 
 You can generate a `.pursfmt.yaml` using the `generate-config` command.
 For example:
 
 ```sh
-pursfmt generate-config --indent 2 --width 80 --arrow-last
+pursfmt generate-config --indent 2 --width 80 --arrow-last --single-line-let-in smart
 ```
 
 If a `.pursfmt.yaml` file is found, it will be used in lieu of CLI arguments.
+The generated config writes this option as `singleLineLetIn: never`,
+`singleLineLetIn: smart`, or `singleLineLetIn: always`.
 
 
 ### Operator Precedence

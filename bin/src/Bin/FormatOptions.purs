@@ -15,7 +15,8 @@ import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
 import Data.YAML.Foreign.Encode (class ToYAML, entry, object)
-import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
+import Foreign.Object as Object
+import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), SingleLineLetInOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
 type FormatOptions =
   { importSort :: ImportSortOption
@@ -30,7 +31,7 @@ type FormatOptions =
   , whereClauseSameLine :: Boolean
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
-  , singleLineLetIn :: Boolean
+  , singleLineLetIn :: SingleLineLetInOption
   , alignClauses :: AlignClausesOption
   , alignCaseBranches :: AlignCaseBranchesOption
   }
@@ -54,7 +55,7 @@ defaults =
   , whereClauseSameLine: false
   , compactRecords: false
   , letClauseSameLine: false
-  , singleLineLetIn: false
+  , singleLineLetIn: SingleLineLetInNever
   , alignClauses: AlignClausesNone
   , alignCaseBranches: AlignCaseBranchesNone
   }
@@ -139,9 +140,10 @@ formatOptions =
           "Put source code directly after \"let\" and \"in\" instead of the next line."
           # Arg.boolean
     , singleLineLetIn:
-        Arg.flag [ "--single-line-let-in", "-slli" ]
-          "Keep single-binding let expressions on one line when they fit."
-          # Arg.boolean
+        Arg.argument [ "--single-line-let-in", "-slli" ]
+          "When to keep single-binding let expressions on one line: never, smart, or always.\nDefaults to never."
+          # Arg.unformat "never|smart|always" singleLineLetInArgFromString
+          # Arg.default defaults.singleLineLetIn
     , alignClauses:
         Arg.choose "align clauses"
           [ Arg.flag [ "--align-clauses-none", "-acn" ]
@@ -200,7 +202,7 @@ fromJson json = do
   whereClauseSameLine <- obj .:? "whereClauseSameLine"
   compactRecords <- obj .:? "compactRecords"
   letClauseSameLine <- obj .:? "letClauseSameLine"
-  singleLineLetIn <- obj .:? "singleLineLetIn"
+  singleLineLetIn <- singleLineLetInFromJson (Object.lookup "singleLineLetIn" obj)
   alignClauses <- traverse alignClausesFromString =<< obj .:? "alignClauses"
   alignCaseBranches <- traverse alignCaseBranchesFromString =<< obj .:? "alignCaseBranches"
   pure
@@ -236,7 +238,7 @@ toJson options =
     # extend (assoc "whereClauseSameLine" (encodeJson options.whereClauseSameLine))
     # extend (assoc "compactRecords" options.compactRecords)
     # extend (assoc "letClauseSameLine" options.letClauseSameLine)
-    # extend (assoc "singleLineLetIn" options.singleLineLetIn)
+    # extend (assoc "singleLineLetIn" (singleLineLetInToString options.singleLineLetIn))
     # extend (assoc "alignClauses" (alignClausesToString options.alignClauses))
     # extend (assoc "alignCaseBranches" (alignCaseBranchesToString options.alignCaseBranches))
 
@@ -300,6 +302,40 @@ importSortToString = case _ of
   ImportSortSource -> "source"
   ImportSortIde -> "ide"
 
+singleLineLetInFromString :: String -> Either JsonDecodeError SingleLineLetInOption
+singleLineLetInFromString = case _ of
+  "never" -> pure SingleLineLetInNever
+  "smart" -> pure SingleLineLetInSmart
+  "always" -> pure SingleLineLetInAlways
+  other -> throwError $ UnexpectedValue (Json.fromString other)
+
+singleLineLetInFromJson :: Maybe Json -> Either JsonDecodeError (Maybe SingleLineLetInOption)
+singleLineLetInFromJson = case _ of
+  Nothing ->
+    pure Nothing
+  Just json
+    | Json.isNull json ->
+        pure Nothing
+    | Just value <- Json.toString json ->
+        Just <$> singleLineLetInFromString value
+    | Just enabled <- Json.toBoolean json ->
+        pure $ Just (if enabled then SingleLineLetInAlways else SingleLineLetInNever)
+    | otherwise ->
+        throwError $ TypeMismatch "String or Boolean"
+
+singleLineLetInArgFromString :: String -> Either String SingleLineLetInOption
+singleLineLetInArgFromString = case _ of
+  "never" -> pure SingleLineLetInNever
+  "smart" -> pure SingleLineLetInSmart
+  "always" -> pure SingleLineLetInAlways
+  _ -> throwError "Expected one of: never, smart, always."
+
+singleLineLetInToString :: SingleLineLetInOption -> String
+singleLineLetInToString = case _ of
+  SingleLineLetInNever -> "never"
+  SingleLineLetInSmart -> "smart"
+  SingleLineLetInAlways -> "always"
+
 alignClausesFromString :: String -> Either JsonDecodeError AlignClausesOption
 alignClausesFromString = case _ of
   "none" -> pure AlignClausesNone
@@ -338,4 +374,5 @@ instance toYAMLFormatOptions :: ToYAML FormatOptionsYAML where
       , "typeArrowPlacement" `entry` typeArrowPlacementToString options.typeArrowPlacement
       , "unicode" `entry` unicodeToString options.unicode
       , "width" `entry` options.width
+      , "singleLineLetIn" `entry` singleLineLetInToString options.singleLineLetIn
       ]

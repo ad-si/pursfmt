@@ -9,6 +9,7 @@ module Test.FormatDirective
 import Prelude
 
 import ArgParse.Basic (ArgError, parseArgs, printArgError)
+import Bin.Arguments as Arguments
 import Bin.FormatOptions as Bin
 import Data.Array as Array
 import Data.Bifunctor (bimap)
@@ -95,7 +96,7 @@ parseDirectivesFromModule (Module { header: ModuleHeader header, body }) =
     _ -> Nothing
 
   parseFormatOptions :: Array String -> Either String (FormatDirective e a)
-  parseFormatOptions = bimap printArgError fromBinFormatOptions <<< parse
+  parseFormatOptions = bimap printArgError fromBinFormatOptions <<< parse <<< Arguments.normalizeLegacyArgs
     where
     parse :: Array String -> Either ArgError Bin.FormatOptions
     parse = parseArgs "format-directives" "Parse format directives." Bin.formatOptions

@@ -44,7 +44,7 @@ type WorkerConfig =
   , whereClauseSameLine :: Boolean
   , compactRecords :: Boolean
   , letClauseSameLine :: Boolean
-  , singleLineLetIn :: Boolean
+  , singleLineLetIn :: String
   , alignClauses :: String
   , alignCaseBranches :: String
   }
@@ -63,7 +63,7 @@ toWorkerConfig options =
   , whereClauseSameLine: options.whereClauseSameLine
   , compactRecords: options.compactRecords
   , letClauseSameLine: options.letClauseSameLine
-  , singleLineLetIn: options.singleLineLetIn
+  , singleLineLetIn: FormatOptions.singleLineLetInToString options.singleLineLetIn
   , alignClauses: FormatOptions.alignClausesToString options.alignClauses
   , alignCaseBranches: FormatOptions.alignCaseBranchesToString options.alignCaseBranches
   }
@@ -149,7 +149,9 @@ formatInPlaceCommand shouldCheck operators { filePath, config } = do
       , whereClauseSameLine: config.whereClauseSameLine
       , compactRecords: config.compactRecords
       , letClauseSameLine: config.letClauseSameLine
-      , singleLineLetIn: config.singleLineLetIn
+      , singleLineLetIn:
+          fromRight' (\_ -> unsafeCrashWith "Unknown singleLineLetIn value") do
+            FormatOptions.singleLineLetInFromString config.singleLineLetIn
       , alignClauses:
           fromRight' (\_ -> unsafeCrashWith "Unknown alignClauses value") do
             FormatOptions.alignClausesFromString config.alignClauses
