@@ -6,16 +6,21 @@ import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as Arg
 import Control.Alt ((<|>))
 import Control.Monad.Error.Class (throwError)
+import Control.Monad.Except (runExcept)
 import Data.Argonaut.Core (Json, jsonEmptyObject, jsonNull)
 import Data.Argonaut.Core as Json
-import Data.Argonaut.Decode (JsonDecodeError(..), decodeJson, (.:?))
+import Data.Argonaut.Decode (JsonDecodeError(..), decodeJson, printJsonDecodeError, (.:?))
 import Data.Argonaut.Encode (assoc, encodeJson, extend)
-import Data.Either (Either)
+import Data.Either (Either(..))
+import Data.Foldable (foldMap)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
-import Data.YAML.Foreign.Encode (class ToYAML, entry, object)
+import Data.YAML.Foreign.Decode (parseYAMLToJson)
+import Data.YAML.Foreign.Encode (class ToYAML, entry, object, printYAML)
+import Foreign (renderForeignError)
 import Foreign.Object as Object
+import Node.Path (FilePath)
 import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), SingleLineLetInOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
 type FormatOptions =
@@ -223,6 +228,10 @@ fromJson json = do
     , alignCaseBranches: fromMaybe defaults.alignCaseBranches alignCaseBranches
     }
 
+-- | Not used by pursfmt. It wrote `.pursfmt.yaml` while that file was JSON.
+-- | `generate-config` now writes YAML with `printConfig`, through the
+-- | `ToYAML FormatOptionsYAML` instance below, and `parseConfig` reads it
+-- | back with `fromJson`. A new option must be added to both of those.
 toJson :: FormatOptions -> Json
 toJson options =
   jsonEmptyObject
@@ -374,5 +383,35 @@ instance toYAMLFormatOptions :: ToYAML FormatOptionsYAML where
       , "typeArrowPlacement" `entry` typeArrowPlacementToString options.typeArrowPlacement
       , "unicode" `entry` unicodeToString options.unicode
       , "width" `entry` options.width
+      , "whereClauseSameLine" `entry` options.whereClauseSameLine
+      , "compactRecords" `entry` options.compactRecords
+      , "letClauseSameLine" `entry` options.letClauseSameLine
       , "singleLineLetIn" `entry` singleLineLetInToString options.singleLineLetIn
+      , "alignClauses" `entry` alignClausesToString options.alignClauses
+      , "alignCaseBranches" `entry` alignCaseBranchesToString options.alignCaseBranches
       ]
+
+-- | The `.pursfmt.yaml` contents that `generate-config` writes.
+printConfig :: FormatOptions -> String
+printConfig options = printYAML (FormatOptionsYAML options)
+
+-- | Parse the contents of a `.pursfmt.yaml` file, before decoding the options.
+-- | The file path is only used in the error message.
+parseConfigJson :: FilePath -> String -> Either String Json
+parseConfigJson filePath contents =
+  case runExcept (parseYAMLToJson contents) of
+    Left foreignErrors ->
+      Left $ "Could not parse YAML in " <> filePath <> ": " <> foldMap renderForeignError foreignErrors
+    Right json ->
+      Right json
+
+-- | Read the format options from the contents of a `.pursfmt.yaml` file.
+-- | The file path is only used in error messages.
+parseConfig :: FilePath -> String -> Either String FormatOptions
+parseConfig filePath contents = do
+  json <- parseConfigJson filePath contents
+  case fromJson json of
+    Left jsonError ->
+      Left $ "Could not decode " <> filePath <> ": " <> printJsonDecodeError jsonError
+    Right options ->
+      Right options

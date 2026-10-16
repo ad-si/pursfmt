@@ -28,10 +28,12 @@ package:
     main: Test.Main
     dependencies:
       - argparse-basic
+      - foreign-object
       - node-fs
       - node-glob-basic
       - node-path
       - pursfmt-bin: "*"
+      - record
 
 workspace:
   packageSet:

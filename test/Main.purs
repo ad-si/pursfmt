@@ -9,13 +9,14 @@ import Bin.FormatOptions as Bin
 import Data.Argonaut.Core as Json
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
-import Data.Either (Either(..))
+import Data.Either (Either(..), either)
 import Data.Foldable (any, findMap, fold, for_)
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.String (Pattern(..))
 import Data.String as String
 import Data.String.CodeUnits as SCU
+import Data.Symbol (class IsSymbol, reflectSymbol)
 import Data.Tuple (Tuple(..))
 import Dodo.Ansi (Color(..))
 import Effect (Effect)
@@ -23,9 +24,14 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Effect.Exception as Error
+import Foreign.Object as Object
 import Node.Process as Process
-import Pursfmt (SingleLineLetInOption(..))
+import Prim.Row as Row
+import Prim.RowList as RL
+import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), SingleLineLetInOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
+import Record as Record
 import Test.Snapshot (SnapshotResult(..), SnapshotResultGroup(..), snapshotFormat)
+import Type.Proxy (Proxy(..))
 
 main :: Effect Unit
 main = do
@@ -114,6 +120,77 @@ runFormatOptionTests = do
   assertJsonMode "legacy boolean false config" (Json.fromBoolean false) SingleLineLetInNever
   assertJsonMode "string smart config" (Json.fromString "smart") SingleLineLetInSmart
   assertJsonModeFails "invalid numeric config" (Json.fromNumber 1.0)
+  for_ [ Bin.defaults, allChanged, otherValues ] assertConfigRoundTrip
+  where
+  -- Between them, `Bin.defaults` and these two use every value of every
+  -- option, including `null` for the optional ones.
+  allChanged :: Bin.FormatOptions
+  allChanged =
+    { importSort: ImportSortIde
+    , importWrap: ImportWrapAuto
+    , indent: 4
+    , operatorsFile: Just ".pursfmt-operators"
+    , ribbon: 0.5
+    , thenPlacement: ThenNewLineForLongLine
+    , typeArrowPlacement: TypeArrowLast
+    , unicode: UnicodeAlways
+    , width: Just 80
+    , whereClauseSameLine: true
+    , compactRecords: true
+    , letClauseSameLine: true
+    , singleLineLetIn: SingleLineLetInSmart
+    , alignClauses: AlignClausesFull
+    , alignCaseBranches: AlignCaseBranchesFull
+    }
+
+  otherValues :: Bin.FormatOptions
+  otherValues = allChanged
+    { thenPlacement = ThenNewLineAlways
+    , unicode = UnicodeNever
+    , singleLineLetIn = SingleLineLetInAlways
+    , alignClauses = AlignClausesEquals
+    , alignCaseBranches = AlignCaseBranchesArrows
+    }
+
+-- | Write the options the way `generate-config` does and read them back the
+-- | way `.pursfmt.yaml` is read. The option names come from the
+-- | `FormatOptions` type, so a new option is checked without changing this.
+assertConfigRoundTrip :: Bin.FormatOptions -> Effect Unit
+assertConfigRoundTrip options = do
+  let yaml = Bin.printConfig options
+  let fields = recordFields options
+  json <- either Error.throw pure (Bin.parseConfigJson "generated config" yaml)
+  let written = maybe [] Object.keys (Json.toObject json)
+  let missing = Array.filter (\label -> not (Array.elem label written)) (map _.label fields)
+  unless (Array.null missing) do
+    Error.throw $ "generate-config does not write " <> String.joinWith ", " missing <> ", it wrote:\n" <> yaml
+  decoded <- either Error.throw pure (Bin.parseConfig "generated config" yaml)
+  let changed = map _.label (Array.filter (\field -> not (field.same options decoded)) fields)
+  unless (Array.null changed) do
+    Error.throw $ "config round trip changed " <> String.joinWith ", " changed <> ", generate-config wrote:\n" <> yaml
+
+type Field r = { label :: String, same :: Record r -> Record r -> Boolean }
+
+recordFields :: forall r rl. RL.RowToList r rl => Fields rl r => Record r -> Array (Field r)
+recordFields _ = fields (Proxy :: Proxy rl)
+
+-- | The label of every field in a record type, with an equality check for
+-- | that field.
+class Fields :: RL.RowList Type -> Row Type -> Constraint
+class Fields rl r where
+  fields :: Proxy rl -> Array (Field r)
+
+instance fieldsNil :: Fields RL.Nil r where
+  fields _ = []
+
+instance fieldsCons :: (IsSymbol label, Row.Cons label a rest r, Eq a, Fields tail r) => Fields (RL.Cons label a tail) r where
+  fields _ = Array.cons field (fields (Proxy :: Proxy tail))
+    where
+    labelProxy = Proxy :: Proxy label
+    field =
+      { label: reflectSymbol labelProxy
+      , same: \x y -> Record.get labelProxy x == Record.get labelProxy y
+      }
 
 assertEqual :: forall a. Eq a => String -> a -> a -> Effect Unit
 assertEqual name expected actual =
