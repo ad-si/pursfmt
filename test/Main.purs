@@ -10,14 +10,14 @@ import Data.Argonaut.Core as Json
 import Data.Argonaut.Decode.Error (printJsonDecodeError)
 import Data.Array as Array
 import Data.Either (Either(..), either)
-import Data.Foldable (any, findMap, fold, for_)
+import Data.Foldable (any, findMap, fold, foldMap, for_)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), maybe)
 import Data.String (Pattern(..))
 import Data.String as String
 import Data.String.CodeUnits as SCU
 import Data.Symbol (class IsSymbol, reflectSymbol)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst)
 import Dodo.Ansi (Color(..))
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
@@ -25,6 +25,7 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Effect.Exception as Error
 import Foreign.Object as Object
+import Main as PursfmtMain
 import Node.Process as Process
 import Prim.Row as Row
 import Prim.RowList as RL
@@ -121,6 +122,7 @@ runFormatOptionTests = do
   assertJsonMode "string smart config" (Json.fromString "smart") SingleLineLetInSmart
   assertJsonModeFails "invalid numeric config" (Json.fromNumber 1.0)
   for_ [ Bin.defaults, allChanged, otherValues ] assertConfigRoundTrip
+  assertNoDuplicateNames
   where
   -- Between them, `Bin.defaults` and these two use every value of every
   -- option, including `null` for the optional ones.
@@ -191,6 +193,37 @@ instance fieldsCons :: (IsSymbol label, Row.Cons label a rest r, Eq a, Fields ta
       { label: reflectSymbol labelProxy
       , same: \x y -> Record.get labelProxy x == Record.get labelProxy y
       }
+
+-- | Two flags or commands with the same name make one of them unreachable.
+assertNoDuplicateNames :: Effect Unit
+assertNoDuplicateNames = do
+  let found = commands (Arg.HelpCommand [ "pursfmt" ] "" (Arg.parserHelp PursfmtMain.parser))
+  unless (Array.any (eq "format" <<< fst) found) do
+    Error.throw "the format command is missing from the parser help"
+  for_ found \(Tuple command help) -> do
+    let used = names help
+    let duplicates = Array.nub (Array.difference used (Array.nub used))
+    unless (Array.null duplicates) do
+      Error.throw $ command <> " has more than one flag or command named " <> String.joinWith ", " duplicates
+  where
+  -- Every command in the help, with its own help.
+  commands :: Arg.ArgHelp -> Array (Tuple String Arg.ArgHelp)
+  commands = case _ of
+    Arg.HelpCommand commandNames _ help -> Array.cons (Tuple (String.joinWith ", " commandNames) help) (commands help)
+    Arg.HelpFormat _ help -> commands help
+    Arg.HelpArgs helps -> foldMap commands helps
+    Arg.HelpChoose _ helps -> foldMap commands helps
+    _ -> []
+
+  -- The names of one command's flags and of its direct subcommands.
+  names :: Arg.ArgHelp -> Array String
+  names = case _ of
+    Arg.HelpFlag flagNames _ -> flagNames
+    Arg.HelpCommand commandNames _ _ -> commandNames
+    Arg.HelpFormat _ help -> names help
+    Arg.HelpArgs helps -> foldMap names helps
+    Arg.HelpChoose _ helps -> foldMap names helps
+    _ -> []
 
 assertEqual :: forall a. Eq a => String -> a -> a -> Effect Unit
 assertEqual name expected actual =
