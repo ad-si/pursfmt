@@ -122,6 +122,11 @@ runFormatOptionTests = do
   assertJsonMode "string smart config" (Json.fromString "smart") SingleLineLetInSmart
   assertJsonModeFails "invalid numeric config" (Json.fromNumber 1.0)
   for_ [ Bin.defaults, allChanged, otherValues ] assertConfigRoundTrip
+  let generatedConfig = Bin.printConfig Bin.defaults
+  assertEqual
+    "generate-config ends .pursfmt.yaml with exactly one newline"
+    true
+    (SCU.takeRight 1 generatedConfig == "\n" && SCU.takeRight 2 generatedConfig /= "\n\n")
   assertNoDuplicateNames
   where
   -- Between them, `Bin.defaults` and these two use every value of every

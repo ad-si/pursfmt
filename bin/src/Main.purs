@@ -203,9 +203,8 @@ main = launchAff_ do
         GenerateRc cliOptions -> do
           rcStats <- Aff.try $ FS.stat rcFileName
           if isLeft rcStats
-          then do
-            let yamlContents = FormatOptions.printConfig cliOptions
-            FS.writeTextFile UTF8 rcFileName $ yamlContents <> "\n"
+          then
+            FS.writeTextFile UTF8 rcFileName (FormatOptions.printConfig cliOptions)
           else do
             Console.error $ rcFileName <> " already exists."
             liftEffect $ Process.setExitCode 1
