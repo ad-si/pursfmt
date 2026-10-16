@@ -5,20 +5,15 @@ import Prelude
 import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as Arg
 import Bin.Arguments as Arguments
-import Bin.FormatOptions (FormatOptions, FormatOptionsYAML(..), formatOptions)
+import Bin.FormatOptions (FormatOptions, formatOptions)
 import Bin.FormatOptions as FormatOptions
 import Bin.Git as Git
 import Bin.Version (version)
 import Bin.Worker (WorkerData, WorkerInput, WorkerOutput, formatCommand, formatInPlaceCommand, toWorkerConfig)
-import Control.Monad.Except (runExcept)
 import Control.Monad.State (evalStateT, lift)
 import Control.Monad.State as State
 import Control.Parallel (parTraverse)
 import Control.Plus ((<|>))
-import Data.Argonaut.Decode (printJsonDecodeError)
-import Data.YAML.Foreign.Decode (parseYAMLToJson)
-import Data.YAML.Foreign.Encode (printYAML)
-import Foreign (renderForeignError)
 import Data.Array as Array
 import Data.Either (Either(..), isLeft)
 import Data.Foldable (fold, foldMap, foldl, for_, oneOf)
@@ -209,7 +204,7 @@ main = launchAff_ do
           rcStats <- Aff.try $ FS.stat rcFileName
           if isLeft rcStats
           then do
-            let yamlContents = printYAML (FormatOptionsYAML cliOptions)
+            let yamlContents = FormatOptions.printConfig cliOptions
             FS.writeTextFile UTF8 rcFileName $ yamlContents <> "\n"
           else do
             Console.error $ rcFileName <> " already exists."
@@ -399,16 +394,12 @@ resolveRcForDir root = go List.Nil
           | otherwise ->
               go (List.Cons dir paths) cache (Path.dirname dir)
         Right contents' ->
-          case runExcept (parseYAMLToJson contents') of
-            Left foreignErrors ->
-              throwError $ error $ "Could not parse YAML in " <> filePath <> ": " <> foldMap renderForeignError foreignErrors
-            Right jsonValue ->
-              case FormatOptions.fromJson jsonValue of
-                Left jsonError ->
-                  throwError $ error $ "Could not decode " <> filePath <> ": " <> printJsonDecodeError jsonError
-                Right options -> do
-                  operatorsFile <- liftEffect $ traverse (Path.resolve [ dir ]) options.operatorsFile
-                  pure $ unwind cache (Just options { operatorsFile = operatorsFile }) (List.Cons dir paths)
+          case FormatOptions.parseConfig filePath contents' of
+            Left message ->
+              throwError $ error message
+            Right options -> do
+              operatorsFile <- liftEffect $ traverse (Path.resolve [ dir ]) options.operatorsFile
+              pure $ unwind cache (Just options { operatorsFile = operatorsFile }) (List.Cons dir paths)
 
   unwind :: RcMap -> Maybe FormatOptions -> List FilePath -> Tuple (Maybe FormatOptions) RcMap
   unwind cache res = case _ of
