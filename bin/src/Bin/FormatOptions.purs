@@ -132,7 +132,7 @@ formatOptions =
           "Put source code directly after \"where\" instead of the next line."
           # Arg.boolean
     , compactRecords:
-        Arg.flag [ "--compact-records", "-cr" ]
+        Arg.flag [ "--compact-records", "-crec" ]
           "Format records without additional space at the start and end of the curly brackets."
           # Arg.boolean
     , letClauseSameLine:
