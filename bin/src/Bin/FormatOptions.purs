@@ -14,7 +14,7 @@ import Data.Either (Either)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Traversable (traverse)
-import Data.YAML.Foreign.Encode (class ToYAML, entry, object)
+import Data.YAML.Foreign.Encode (class ToYAML, entry, object, printYAML)
 import Foreign.Object as Object
 import Pursfmt (AlignCaseBranchesOption(..), AlignClausesOption(..), ImportSortOption(..), ImportWrapOption(..), SingleLineLetInOption(..), ThenPlacementOption(..), TypeArrowOption(..), UnicodeOption(..))
 
@@ -376,3 +376,7 @@ instance toYAMLFormatOptions :: ToYAML FormatOptionsYAML where
       , "width" `entry` options.width
       , "singleLineLetIn" `entry` singleLineLetInToString options.singleLineLetIn
       ]
+
+-- | The `.pursfmt.yaml` contents that `generate-config` writes.
+printConfig :: FormatOptions -> String
+printConfig options = printYAML (FormatOptionsYAML options)

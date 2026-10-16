@@ -5,7 +5,7 @@ import Prelude
 import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as Arg
 import Bin.Arguments as Arguments
-import Bin.FormatOptions (FormatOptions, FormatOptionsYAML(..), formatOptions)
+import Bin.FormatOptions (FormatOptions, formatOptions)
 import Bin.FormatOptions as FormatOptions
 import Bin.Git as Git
 import Bin.Version (version)
@@ -17,7 +17,6 @@ import Control.Parallel (parTraverse)
 import Control.Plus ((<|>))
 import Data.Argonaut.Decode (printJsonDecodeError)
 import Data.YAML.Foreign.Decode (parseYAMLToJson)
-import Data.YAML.Foreign.Encode (printYAML)
 import Foreign (renderForeignError)
 import Data.Array as Array
 import Data.Either (Either(..), isLeft)
@@ -208,9 +207,8 @@ main = launchAff_ do
         GenerateRc cliOptions -> do
           rcStats <- Aff.try $ FS.stat rcFileName
           if isLeft rcStats
-          then do
-            let yamlContents = printYAML (FormatOptionsYAML cliOptions)
-            FS.writeTextFile UTF8 rcFileName $ yamlContents <> "\n"
+          then
+            FS.writeTextFile UTF8 rcFileName (FormatOptions.printConfig cliOptions)
           else do
             Console.error $ rcFileName <> " already exists."
             liftEffect $ Process.setExitCode 1
